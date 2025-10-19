@@ -10,7 +10,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import com.biosense.app.ui.components.GradientBackground
 import com.biosense.app.ui.theme.BiosenseTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,11 +21,16 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             BiosenseTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                GradientBackground {
+                    Scaffold(
+                        modifier = Modifier.fillMaxSize(),
+                        containerColor = Color.Transparent
+                    ) { innerPadding ->
+                        Greeting(
+                            name = "Android",
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                    }
                 }
             }
         }
@@ -42,6 +49,8 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun GreetingPreview() {
     BiosenseTheme {
-        Greeting("Android")
+        GradientBackground {
+            Greeting("Android")
+        }
     }
 }
