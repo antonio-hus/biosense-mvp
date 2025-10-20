@@ -45,6 +45,9 @@ fun MainContent() {
                             launchSingleTop = true
                             restoreState = true
                         }
+                    },
+                    onProfileClick = {
+                        navController.navigate("account")
                     }
                 )
             }
@@ -59,6 +62,9 @@ fun MainContent() {
                             launchSingleTop = true
                             restoreState = true
                         }
+                    },
+                    onProfileClick = {
+                        navController.navigate("account")
                     }
                 )
             }
@@ -73,6 +79,9 @@ fun MainContent() {
                             launchSingleTop = true
                             restoreState = true
                         }
+                    },
+                    onProfileClick = {
+                        navController.navigate("account")
                     }
                 )
             }
@@ -87,6 +96,16 @@ fun MainContent() {
                             launchSingleTop = true
                             restoreState = true
                         }
+                    },
+                    onProfileClick = {
+                        navController.navigate("account")
+                    }
+                )
+            }
+            composable("account") {
+                AccountScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
                     }
                 )
             }

@@ -1,6 +1,7 @@
 package com.biosense.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,13 +19,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.biosense.app.model.ChatMessage
 import com.biosense.app.ui.components.GlassNavBar
+import com.biosense.app.ui.components.Header
 import com.biosense.app.ui.viewmodel.ChatMessageViewModel
 import kotlinx.coroutines.launch
 
@@ -32,6 +33,7 @@ import kotlinx.coroutines.launch
 fun ChatScreen(
     currentRoute: String,
     onNavigate: (String) -> Unit,
+    onProfileClick: () -> Unit,
     viewModel: ChatMessageViewModel = viewModel()
 ) {
     val messages by viewModel.messages.collectAsState()
@@ -64,6 +66,12 @@ fun ChatScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            // Header
+            Header(
+                title = "Advisor",
+                onProfileClick = onProfileClick
+            )
+
             // Messages list
             LazyColumn(
                 modifier = Modifier
@@ -117,13 +125,37 @@ fun ChatBubble(message: ChatMessage) {
                         bottomEnd = if (message.isUser) 4.dp else 16.dp
                     )
                 )
-                .background(MaterialTheme.colorScheme.surface)
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.25f),
+                            Color.White.copy(alpha = 0.15f)
+                        ),
+                        start = Offset(0f, 0f),
+                        end = Offset(1000f, 1000f)
+                    )
+                )
+                .border(
+                    width = 1.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.3f),
+                            Color.White.copy(alpha = 0.1f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(
+                        topStart = 16.dp,
+                        topEnd = 16.dp,
+                        bottomStart = if (message.isUser) 16.dp else 4.dp,
+                        bottomEnd = if (message.isUser) 4.dp else 16.dp
+                    )
+                )
                 .padding(12.dp)
         ) {
             Text(
                 text = message.text,
                 fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = Color.White,
                 lineHeight = 20.sp
             )
         }
@@ -139,7 +171,26 @@ fun TypingIndicator() {
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surface)
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.25f),
+                            Color.White.copy(alpha = 0.15f)
+                        ),
+                        start = Offset(0f, 0f),
+                        end = Offset(1000f, 1000f)
+                    )
+                )
+                .border(
+                    width = 1.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.3f),
+                            Color.White.copy(alpha = 0.1f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                )
                 .padding(16.dp)
         ) {
             Row(
@@ -151,7 +202,7 @@ fun TypingIndicator() {
                         modifier = Modifier
                             .size(8.dp)
                             .clip(RoundedCornerShape(4.dp))
-                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                            .background(Color.White.copy(alpha = 0.6f))
                     )
                 }
             }
@@ -171,6 +222,7 @@ fun ChatInputField(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Text field with liquid glass effect
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -178,12 +230,22 @@ fun ChatInputField(
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.2f),
+                            Color.White.copy(alpha = 0.25f),
                             Color.White.copy(alpha = 0.15f)
                         ),
                         start = Offset(0f, 0f),
                         end = Offset(1000f, 1000f)
                     )
+                )
+                .border(
+                    width = 1.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.3f),
+                            Color.White.copy(alpha = 0.1f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(24.dp)
                 )
         ) {
             TextField(
@@ -210,6 +272,7 @@ fun ChatInputField(
             )
         }
 
+        // Send button with liquid glass effect
         IconButton(
             onClick = onSendClick,
             modifier = Modifier
@@ -218,10 +281,22 @@ fun ChatInputField(
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.3f),
-                            Color.White.copy(alpha = 0.2f)
-                        )
+                            Color.White.copy(alpha = 0.25f),
+                            Color.White.copy(alpha = 0.15f)
+                        ),
+                        start = Offset(0f, 0f),
+                        end = Offset(1000f, 1000f)
                     )
+                )
+                .border(
+                    width = 1.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.3f),
+                            Color.White.copy(alpha = 0.1f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(28.dp)
                 )
         ) {
             Icon(

@@ -11,6 +11,6 @@ sealed class NavItem(
 ) {
     data object Today : NavItem("today", Icons.Default.Today, "Today")
     data object Trends : NavItem("trends", Icons.Default.TrendingUp, "Trends")
-    data object Chat : NavItem("chat", Icons.Default.Chat, "Chat")
+    data object Chat : NavItem("chat", Icons.Default.Chat, "Advisor")
     data object Search : NavItem("search", Icons.Default.Search, "Search")
 }

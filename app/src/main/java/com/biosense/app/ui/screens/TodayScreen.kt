@@ -12,11 +12,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.biosense.app.ui.components.GlassNavBar
+import com.biosense.app.ui.components.Header
 
 @Composable
 fun TodayScreen(
     currentRoute: String,
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    onProfileClick: () -> Unit
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -31,15 +33,26 @@ fun TodayScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-            contentAlignment = Alignment.Center
+                .padding(innerPadding)
         ) {
-            Text(
-                text = "Today",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+            // Header
+            Header(
+                title = "Today",
+                onProfileClick = onProfileClick
             )
+
+            // Content
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Today",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
         }
     }
 }

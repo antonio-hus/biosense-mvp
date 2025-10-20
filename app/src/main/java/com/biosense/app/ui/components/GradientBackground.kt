@@ -10,7 +10,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import com.biosense.app.ui.theme.Background
 
 @Composable
 fun GradientBackground(
@@ -20,31 +19,41 @@ fun GradientBackground(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Background)  // Base #F2F2F7
+            .background(Color(0xFF0F1419))  // Deep dark blue-gray base
             .drawBehind {
-                // Upper right gradient (mint color)
-                // CSS: at 97.46% 0%, radius 81.8% 39.44%
+                // Upper right gradient (deep teal/cyan)
                 drawRect(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            Color(0xFFA8E6CF),
-                            Color(0x00A8E6CF)
+                            Color(0xFF1A4D5C),  // Deep teal
+                            Color(0x001A4D5C)
                         ),
                         center = Offset(size.width * 0.97f, 0f),
                         radius = size.width * 1.0f
                     )
                 )
 
-                // Lower left gradient (dark green)
-                // CSS: at -48.09% 107.45%, radius 119.31% 56.8%
+                // Lower left gradient (deep purple-blue)
                 drawRect(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            Color(0xCC377765),
-                            Color(0x00377765)
+                            Color(0xCC1E2538),  // Deep blue-purple
+                            Color(0x001E2538)
                         ),
                         center = Offset(size.width * -0.48f, size.height * 1.07f),
                         radius = size.height * 0.8f
+                    )
+                )
+
+                // Center accent gradient (subtle deep purple)
+                drawRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color(0x4D2D1B42),  // Subtle purple accent
+                            Color(0x002D1B42)
+                        ),
+                        center = Offset(size.width * 0.5f, size.height * 0.5f),
+                        radius = size.height * 0.6f
                     )
                 )
             }

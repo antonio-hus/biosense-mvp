@@ -1,24 +1,36 @@
 package com.biosense.app.ui.theme
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 
-private val LightColorScheme = lightColorScheme(
+private val DarkColorScheme = darkColorScheme(
     primary = Primary,
-    onPrimary = TextWhite,
+    onPrimary = OnPrimary,
+    primaryContainer = PrimaryContainer,
+    onPrimaryContainer = OnPrimaryContainer,
+
     secondary = Secondary,
-    onSecondary = Text,
+    onSecondary = OnSecondary,
+    secondaryContainer = SecondaryContainer,
+    onSecondaryContainer = OnSecondaryContainer,
+
     background = Background,
-    onBackground = Text,
+    onBackground = OnBackground,
+
     surface = Surface,
-    onSurface = Text
+    onSurface = OnSurface,
+    surfaceVariant = SurfaceVariant,
+    onSurfaceVariant = OnSurfaceVariant,
+
+    error = Error,
+    onError = OnError
 )
 
 @Composable
 fun BiosenseTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = LightColorScheme,
+        colorScheme = DarkColorScheme,
         typography = Typography,
         content = content
     )
