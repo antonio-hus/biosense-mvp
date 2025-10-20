@@ -4,17 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.biosense.app.ui.components.GradientBackground
-import com.biosense.app.ui.components.Logo
+import com.biosense.app.ui.screens.*
 import com.biosense.app.ui.theme.BiosenseTheme
 
 class MainActivity : ComponentActivity() {
@@ -23,21 +19,76 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             BiosenseTheme {
-                GradientBackground {
-                    Scaffold(
-                        modifier = Modifier.fillMaxSize(),
-                        containerColor = Color.Transparent
-                    ) { innerPadding ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(innerPadding),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Logo()
+                MainContent()
+            }
+        }
+    }
+}
+
+@Composable
+fun MainContent() {
+    val navController = rememberNavController()
+
+    GradientBackground {
+        NavHost(
+            navController = navController,
+            startDestination = "today"
+        ) {
+            composable("today") {
+                TodayScreen(
+                    currentRoute = "today",
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
                     }
-                }
+                )
+            }
+            composable("trends") {
+                TrendsScreen(
+                    currentRoute = "trends",
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+            }
+            composable("chat") {
+                ChatScreen(
+                    currentRoute = "chat",
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+            }
+            composable("search") {
+                SearchScreen(
+                    currentRoute = "search",
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
             }
         }
     }
@@ -47,8 +98,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainPreview() {
     BiosenseTheme {
-        GradientBackground {
-            Logo()
-        }
+        MainContent()
     }
 }
