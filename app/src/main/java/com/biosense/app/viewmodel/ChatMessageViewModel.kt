@@ -1,7 +1,11 @@
 package com.biosense.app.ui.viewmodel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.biosense.app.health.FakeHealthConnectManager
+import com.biosense.app.health.HealthConnectManager
 import com.biosense.app.model.ChatMessage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,7 +13,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class ChatMessageViewModel : ViewModel() {
+class ChatMessageViewModel(application: Application) : AndroidViewModel(application) {
+
+//  Uncomment the following line if using real data
+//  private val healthConnectManager = HealthConnectManager.getInstance(application)
+    private val healthConnectManager = FakeHealthConnectManager.getInstance()
+
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages.asStateFlow()
 
