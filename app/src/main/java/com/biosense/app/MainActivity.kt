@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.health.connect.client.HealthConnectClient
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -18,6 +19,7 @@ import com.biosense.app.health.HealthConnectManager
 import com.biosense.app.ui.components.GradientBackground
 import com.biosense.app.ui.screens.*
 import com.biosense.app.ui.theme.BiosenseTheme
+import com.biosense.app.viewmodel.TodayViewModel
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -83,6 +85,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainContent() {
     val navController = rememberNavController()
+    val todayViewModel: TodayViewModel = viewModel()
 
     GradientBackground {
         NavHost(
@@ -103,7 +106,8 @@ fun MainContent() {
                     },
                     onProfileClick = {
                         navController.navigate("account")
-                    }
+                    },
+                    viewModel = todayViewModel
                 )
             }
             composable("trends") {
@@ -154,7 +158,8 @@ fun MainContent() {
                     },
                     onProfileClick = {
                         navController.navigate("account")
-                    }
+                    },
+                    viewModel = todayViewModel
                 )
             }
             composable("account") {
