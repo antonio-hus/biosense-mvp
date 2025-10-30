@@ -124,7 +124,8 @@ fun MainContent() {
                     },
                     onProfileClick = {
                         navController.navigate("account")
-                    }
+                    },
+                    todayViewModel = todayViewModel
                 )
             }
             composable("chat") {
