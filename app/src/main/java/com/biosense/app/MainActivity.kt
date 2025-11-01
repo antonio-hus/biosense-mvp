@@ -1,12 +1,16 @@
 package com.biosense.app
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.health.connect.client.HealthConnectClient
 import androidx.lifecycle.lifecycleScope
@@ -14,15 +18,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.biosense.app.health.FakeHealthConnectManager
 import com.biosense.app.health.HealthConnectManager
+import kotlinx.coroutines.launch
 import com.biosense.app.ui.components.GradientBackground
 import com.biosense.app.ui.screens.*
 import com.biosense.app.ui.theme.BiosenseTheme
 import com.biosense.app.viewmodel.TodayViewModel
-import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import com.biosense.app.viewmodel.UserViewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -30,6 +32,8 @@ class MainActivity : ComponentActivity() {
         HealthConnectManager.getInstance(this)
     }
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<Set<String>>
+    private var permissionResult by mutableStateOf(false)
+    private var connectionCallback: (() -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,61 +41,113 @@ class MainActivity : ComponentActivity() {
 
         requestPermissionLauncher =
             registerForActivityResult(healthConnectManager.requestPermissionActivityContract) { grantedPermissions ->
-                if (grantedPermissions.isNotEmpty()) {
-                    Log.d("HealthConnect", "All permissions granted! Health Connect is ready.")
-                } else {
-                    Log.w("HealthConnect", "Permissions not granted.")
+                val allGranted = grantedPermissions.containsAll(HealthConnectManager.PERMISSIONS)
+                permissionResult = allGranted
+                
+                if (allGranted) {
+                    connectionCallback?.invoke()
+                    connectionCallback = null
                 }
             }
 
-        setupHealthConnect()
 
         setContent {
             BiosenseTheme {
-                MainContent()
+                MainContent(
+                    onRequestHealthPermissions = { callback ->
+                        connectionCallback = callback
+                        requestHealthPermissions()
+                    },
+                    permissionGranted = permissionResult
+                )
             }
         }
     }
 
-    private fun setupHealthConnect() {
+    private fun requestHealthPermissions() {
         lifecycleScope.launch {
-            when (healthConnectManager.getSdkStatus(this@MainActivity)) {
-                HealthConnectClient.SDK_AVAILABLE -> {
-                    if (!healthConnectManager.hasAllPermissions(HealthConnectManager.PERMISSIONS)) {
+            try {
+                val sdkStatus = healthConnectManager.getSdkStatus(this@MainActivity)
+                
+                when (sdkStatus) {
+                    HealthConnectClient.SDK_AVAILABLE -> {
                         requestPermissionLauncher.launch(HealthConnectManager.PERMISSIONS)
-                    } else {
-                        Log.d(
-                            "HealthConnect",
-                            "Permissions already granted. Health Connect is ready."
-                        )
+                    }
+                    HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED -> {
+                        val intent = healthConnectManager.getInstallHealthConnectIntent(this@MainActivity)
+                        startActivity(intent)
                     }
                 }
-
-                HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED -> {
-                    Log.w("HealthConnect", "Health Connect needs to be updated.")
-                    val installIntent =
-                        healthConnectManager.getInstallHealthConnectIntent(this@MainActivity)
-                    startActivity(installIntent)
-                }
-
-                HealthConnectClient.SDK_UNAVAILABLE -> {
-                    Log.e("HealthConnect", "Health Connect is not available on this device.")
-                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
+
 }
 
 @Composable
-fun MainContent() {
+fun MainContent(
+    onRequestHealthPermissions: (callback: () -> Unit) -> Unit = { _ -> },
+    permissionGranted: Boolean = false
+) {
+    val context = LocalContext.current
     val navController = rememberNavController()
+    val userViewModel: UserViewModel = viewModel()
+    val currentUser by userViewModel.currentUser
+    val isUserCreated by userViewModel.isUserCreated
     val todayViewModel: TodayViewModel = viewModel()
+
+    LaunchedEffect(Unit) {
+        userViewModel.initialize(context)
+    }
+
+
+    val startDestination = if (isUserCreated && currentUser.name.isNotEmpty()) "loading" else "main"
 
     GradientBackground {
         NavHost(
             navController = navController,
-            startDestination = "today"
+            startDestination = startDestination
         ) {
+            composable("loading") {
+                LoadingScreen(
+                    userName = currentUser.name.ifEmpty { "User" },
+                    onLoadingComplete = {
+                        navController.navigate("today") {
+                            popUpTo("loading") { inclusive = true }
+                        }
+                    }
+                )
+            }
+            composable("main") {
+                MainScreen(
+                    onCreateAccount = {
+                        navController.navigate("watch_connection")
+                    }
+                )
+            }
+            composable("watch_connection") {
+                WatchConnectionScreen(
+                    onContinue = {
+                        navController.navigate("create_account")
+                    },
+                    onRequestPermissions = { callback ->
+                        onRequestHealthPermissions(callback)
+                    },
+                    permissionGranted = permissionGranted
+                )
+            }
+            composable("create_account") {
+                CreateAccountScreen(
+                    onComplete = {
+                        navController.navigate("loading") {
+                            popUpTo("main") { inclusive = true }
+                        }
+                    },
+                    userViewModel = userViewModel
+                )
+            }
             composable("today") {
                 TodayScreen(
                     currentRoute = "today",
@@ -167,7 +223,8 @@ fun MainContent() {
                 AccountScreen(
                     onNavigateBack = {
                         navController.popBackStack()
-                    }
+                    },
+                    userViewModel = userViewModel
                 )
             }
         }

@@ -52,6 +52,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.7.5")
     implementation(libs.androidx.navigation.compose)
     implementation("androidx.health.connect:connect-client:1.1.0-alpha11")
+    implementation("com.airbnb.android:lottie-compose:6.1.0")
+    implementation("io.coil-kt:coil-compose:2.5.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -3,7 +3,6 @@ package com.biosense.app.health
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
@@ -19,11 +18,10 @@ class HealthConnectManager private constructor(context: Context) : IHealthConnec
     private val healthConnectClient: HealthConnectClient = HealthConnectClient.getOrCreate(context)
 
     fun getSdkStatus(context: Context): Int {
-        return HealthConnectClient.getSdkStatus(context, "com.google.android.apps.healthdata")
+        return HealthConnectClient.getSdkStatus(context)
     }
 
     fun getInstallHealthConnectIntent(context: Context): Intent {
-        // This is a more robust way to create the install intent
         val providerPackageName = "com.google.android.apps.healthdata"
         val uriString = "market://details?id=$providerPackageName&url=https://play.google.com/store/apps/details?id=$providerPackageName"
         return Intent(Intent.ACTION_VIEW).apply {
@@ -38,7 +36,16 @@ class HealthConnectManager private constructor(context: Context) : IHealthConnec
         get() = PermissionController.createRequestPermissionResultContract()
 
     suspend fun hasAllPermissions(permissions: Set<String>): Boolean {
-        return healthConnectClient.permissionController.getGrantedPermissions().containsAll(permissions)
+        val grantedPermissions = healthConnectClient.permissionController.getGrantedPermissions()
+        return grantedPermissions.containsAll(permissions)
+    }
+    
+    suspend fun getCurrentPermissions(): Set<String> {
+        return try {
+            healthConnectClient.permissionController.getGrantedPermissions()
+        } catch (e: Exception) {
+            emptySet()
+        }
     }
 
     override suspend fun readSteps(startTime: Instant, endTime: Instant): List<StepsRecord> {
@@ -105,7 +112,6 @@ class HealthConnectManager private constructor(context: Context) : IHealthConnec
             )
             healthConnectClient.readRecords(request).records
         } catch (e: Exception) {
-            Log.e("HealthConnectManager", "Error reading ${recordType.simpleName}", e)
             emptyList()
         }
     }
@@ -131,8 +137,10 @@ class HealthConnectManager private constructor(context: Context) : IHealthConnec
         val PERMISSIONS =
             setOf(
                 HealthPermission.getReadPermission(StepsRecord::class),
+                HealthPermission.getWritePermission(StepsRecord::class),
                 HealthPermission.getReadPermission(HeartRateRecord::class),
                 HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class),
+                HealthPermission.getReadPermission(DistanceRecord::class),
                 HealthPermission.getReadPermission(BloodGlucoseRecord::class),
                 HealthPermission.getReadPermission(BloodPressureRecord::class),
                 HealthPermission.getReadPermission(BodyFatRecord::class),
@@ -144,6 +152,9 @@ class HealthConnectManager private constructor(context: Context) : IHealthConnec
                 HealthPermission.getReadPermission(RespiratoryRateRecord::class),
                 HealthPermission.getReadPermission(SleepSessionRecord::class),
                 HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
+                HealthPermission.getReadPermission(WeightRecord::class),
+                HealthPermission.getWritePermission(WeightRecord::class),
+                HealthPermission.getReadPermission(ExerciseSessionRecord::class)
             )
     }
 }
