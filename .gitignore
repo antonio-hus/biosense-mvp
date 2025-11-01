@@ -13,3 +13,14 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Backup files
+*_backup*.json
+*_backup*.lottie
+
+# Unused assets  
+app/src/main/assets/mor.lottie
+app/src/main/assets/mr.lottie
+
+# Gradle wrapper (keep original, ignore line ending changes)
+gradlew.bat

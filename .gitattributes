@@ -1,0 +1,5 @@
+# Handle line endings
+* text=auto
+
+# Gradle wrapper should maintain LF line endings
+gradlew text eol=lf
