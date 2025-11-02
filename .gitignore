@@ -1,3 +1,6 @@
+# Claude Code directory
+.claude/
+
 *.iml
 .gradle
 /local.properties
