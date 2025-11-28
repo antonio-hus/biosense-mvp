@@ -4,8 +4,15 @@ import com.google.ai.client.generativeai.GenerativeModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+/**
+ * Production implementation of the AI service using Google's Gemini API.
+ * Handles network requests on the IO dispatcher.
+ *
+ * @param apiKey The Google AI Studio API key.
+ */
 class GeminiService(private val apiKey: String) : IGeminiApiService {
 
+    // "gemini-2.5-flash" is optimized for speed and cost, ideal for chat interactions.
     private val generativeModel = GenerativeModel(
         modelName = "gemini-2.5-flash",
         apiKey = apiKey
@@ -22,6 +29,7 @@ class GeminiService(private val apiKey: String) : IGeminiApiService {
         } catch (e: Exception) {
             // Log the error in a real app
             e.printStackTrace()
+            // Return a user-friendly error string instead of crashing
             "Error: Unable to connect to AI service. (${e.localizedMessage})"
         }
     }

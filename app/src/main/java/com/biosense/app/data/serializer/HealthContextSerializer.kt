@@ -10,14 +10,20 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+/**
+ * Handles the conversion of [HealthContext] data into string formats suitable for AI consumption.
+ * Supports standard JSON for logging/debugging and TOON (Token-Oriented Object Notation) for efficient AI prompting.
+ */
 class HealthContextSerializer {
 
+    // Date formatters for human-readable time output in TOON
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.US)
         .withZone(ZoneId.systemDefault())
 
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.US)
         .withZone(ZoneId.systemDefault())
 
+    // Gson instance configured to handle Java 8 Instant types
     private val gson: Gson = GsonBuilder()
         .registerTypeAdapter(Instant::class.java, JsonSerializer<Instant> { src, _, _ ->
             JsonPrimitive(src.toString()) // Serialize Instant as ISO-8601 String
@@ -25,10 +31,19 @@ class HealthContextSerializer {
         .setPrettyPrinting()
         .create()
 
+    /**
+     * Serializes health context to standard JSON format.
+     * Useful for debugging or exporting data.
+     */
     fun toJson(context: HealthContext): String {
         return gson.toJson(context)
     }
 
+    /**
+     * Serializes health context to TOON (Token-Oriented Object Notation).
+     * This format is highly optimized for Large Language Models (LLMs), using 40-60% fewer tokens than JSON
+     * by removing repetitive keys and brackets in favor of a Markdown-table-like structure.
+     */
     fun toToon(context: HealthContext): String {
         val sb = StringBuilder()
 
