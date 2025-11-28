@@ -3,6 +3,7 @@ package com.biosense.app.ui.screens
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -28,7 +30,7 @@ import com.biosense.app.ui.components.ChatInputField
 import com.biosense.app.ui.components.GlassNavBar
 import com.biosense.app.ui.components.Header
 import com.biosense.app.ui.components.TypingIndicator
-import com.biosense.app.ui.components.glassEffect // Make sure this import is correct
+import com.biosense.app.ui.components.glassEffect
 import com.biosense.app.viewmodel.ChatViewModel
 import kotlinx.coroutines.launch
 
@@ -37,7 +39,12 @@ fun ChatScreen(
     currentRoute: String,
     onNavigate: (String) -> Unit,
     onProfileClick: () -> Unit,
-    viewModel: ChatViewModel = viewModel()
+    viewModel: ChatViewModel = viewModel(),
+    suggestedQuestions: List<String> = listOf(
+        "How is my sleep quality this week?",
+        "Analyze my heart rate trends.",
+        "Give me a summary of my activity."
+    )
 ) {
     val messages by viewModel.messages.collectAsState()
     val sessions by viewModel.sessions.collectAsState()
@@ -48,7 +55,7 @@ fun ChatScreen(
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    // Initialize session logic (creates temp session if needed)
+    // Initialize session logic
     LaunchedEffect(Unit) {
         viewModel.initializeSession()
     }
@@ -74,12 +81,8 @@ fun ChatScreen(
                     viewModel.selectSession(id)
                     scope.launch { drawerState.close() }
                 },
-                onDeleteSession = { id ->
-                    viewModel.deleteSession(id)
-                },
-                onRenameSession = { id, newTitle ->
-                    viewModel.renameSession(id, newTitle)
-                }
+                onDeleteSession = { id -> viewModel.deleteSession(id) },
+                onRenameSession = { id, newTitle -> viewModel.renameSession(id, newTitle) }
             )
         },
         scrimColor = Color.Black.copy(alpha = 0.6f)
@@ -90,7 +93,7 @@ fun ChatScreen(
             bottomBar = { GlassNavBar(currentRoute, onNavigate) }
         ) { innerPadding ->
             Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-                // Header with Menu Button
+                // Header
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -107,20 +110,40 @@ fun ChatScreen(
                     Header(title = "Advisor", onProfileClick = onProfileClick)
                 }
 
-                // Messages List
-                LazyColumn(
-                    modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp),
-                    state = listState,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                // Content Area
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
                 ) {
-                    items(messages, key = { it.id }) { message ->
-                        ChatBubble(message)
-                    }
-                    if (isLoading) {
-                        item { TypingIndicator() }
+                    if (messages.isEmpty() && !isLoading) {
+                        // Empty State with Suggestions
+                        EmptyChatSuggestions(
+                            suggestions = suggestedQuestions,
+                            onSuggestionClick = { question ->
+                                viewModel.sendMessage(question)
+                            }
+                        )
+                    } else {
+                        // Messages List
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                            state = listState,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(messages, key = { it.id }) { message ->
+                                ChatBubble(message)
+                            }
+                            if (isLoading) {
+                                item { TypingIndicator() }
+                            }
+                        }
                     }
                 }
 
+                // Input Field
                 var text by remember { mutableStateOf("") }
                 ChatInputField(
                     messageText = text,
@@ -137,6 +160,48 @@ fun ChatScreen(
 }
 
 @Composable
+fun EmptyChatSuggestions(
+    suggestions: List<String>,
+    onSuggestionClick: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "How can I help you today?",
+            fontSize = 20.sp,
+            color = Color.White.copy(alpha = 0.8f),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
+
+        suggestions.forEach { suggestion ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp)
+                    .glassEffect(shape = RoundedCornerShape(16.dp))
+                    .clickable { onSuggestionClick(suggestion) }
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = suggestion,
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+// ... (Keep GlassDrawerContent and SessionItem exactly as they were) ...
+@Composable
 fun GlassDrawerContent(
     sessions: List<ChatSessionEntity>,
     currentSessionId: String?,
@@ -145,7 +210,6 @@ fun GlassDrawerContent(
     onDeleteSession: (String) -> Unit,
     onRenameSession: (String, String) -> Unit
 ) {
-    // State for controlling the rename dialog
     var showRenameDialog by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     ModalDrawerSheet(
@@ -153,9 +217,8 @@ fun GlassDrawerContent(
         modifier = Modifier
             .fillMaxHeight()
             .width(300.dp)
-            .padding(end = 16.dp) // Visual gap from right edge
+            .padding(end = 16.dp)
     ) {
-        // Glass container
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -178,7 +241,6 @@ fun GlassDrawerContent(
                 .padding(16.dp)
         ) {
             Column {
-                // "New Chat" Button
                 Button(
                     onClick = onNewChat,
                     modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -203,7 +265,6 @@ fun GlassDrawerContent(
                 Text("History", color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Session List
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(sessions) { session ->
                         SessionItem(
@@ -219,7 +280,6 @@ fun GlassDrawerContent(
         }
     }
 
-    // Rename Dialog Overlay
     if (showRenameDialog != null) {
         val (sessionId, currentTitle) = showRenameDialog!!
         var newTitle by remember { mutableStateOf(currentTitle) }
@@ -265,7 +325,6 @@ fun SessionItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            // Combined clickable handles both regular click and long press
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = { showMenu = true }
@@ -282,7 +341,6 @@ fun SessionItem(
             fontSize = 16.sp
         )
 
-        // Context Menu (Dropdown)
         DropdownMenu(
             expanded = showMenu,
             onDismissRequest = { showMenu = false }

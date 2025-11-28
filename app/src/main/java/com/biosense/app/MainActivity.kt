@@ -91,17 +91,11 @@ fun MainContent(
     onRequestHealthPermissions: (callback: () -> Unit) -> Unit = { _ -> },
     permissionGranted: Boolean = false
 ) {
-    val context = LocalContext.current
     val navController = rememberNavController()
     val userViewModel: UserViewModel = viewModel()
     val currentUser by userViewModel.currentUser
     val isUserCreated by userViewModel.isUserCreated
     val todayViewModel: TodayViewModel = viewModel()
-
-    LaunchedEffect(Unit) {
-        userViewModel.initialize(context)
-    }
-
 
     val startDestination = if (isUserCreated && currentUser.name.isNotEmpty()) "loading" else "main"
 

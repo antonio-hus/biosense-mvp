@@ -17,7 +17,7 @@ class ChatRepository(
         return chatDao.getMessagesForSession(sessionId)
     }
 
-    suspend fun getRecentMessages(sessionId: String, limit: Int = 10): List<ChatMessageEntity> {
+    suspend fun getRecentMessages(sessionId: String, limit: Int): List<ChatMessageEntity> {
         return chatDao.getRecentMessages(sessionId, limit)
     }
 
@@ -26,19 +26,24 @@ class ChatRepository(
         return "Conversation #$count"
     }
 
+    // CRITICAL: This function now explicitly uses the ID passed to it
     suspend fun createSessionWithId(id: String, title: String) {
         val newSession = ChatSessionEntity(id = id, title = title)
         chatDao.insertSession(newSession)
     }
 
+    /**
+     * Sends message to AI and saves result to DB.
+     * Returns the context update string if the AI requested one (e.g. "User has flu"), or null.
+     */
     suspend fun sendMessage(
         sessionId: String,
         displayText: String,
         aiPrompt: String,
         isFirstMessage: Boolean
-    ) {
-        var finalSessionId = sessionId
+    ): String? {
 
+        // 1. Ensure Session Exists (Using the exact sessionId passed from ViewModel)
         if (isFirstMessage) {
             val existing = chatDao.getSessionById(sessionId)
             if (existing == null) {
@@ -47,31 +52,47 @@ class ChatRepository(
             }
         }
 
-        // 1) Save user-facing message
+        // 2. Insert User Message immediately (UI will see this via Flow)
         val userMsg = ChatMessageEntity(
-            sessionId = finalSessionId,
+            sessionId = sessionId,
             text = displayText,
             isUser = true
         )
         chatDao.insertMessage(userMsg)
 
-        // 2) Call AI with full prompt (context + question)
+        // 3. Call AI Service
         try {
-            val responseText = apiService.generateResponse(aiPrompt)
+            val fullResponse = apiService.generateResponse(aiPrompt)
 
+            // 4. Parse SET_CONTEXT command
+            val updateRegex = "\\[SET_CONTEXT:(.*?)\\]".toRegex()
+            val match = updateRegex.find(fullResponse)
+
+            // If found, this is the NEW complete state
+            val newContextState = match?.groupValues?.get(1)?.trim()
+
+            // Remove tag from display text
+            val displayResponse = fullResponse.replace(updateRegex, "").trim()
+
+            // 5. Insert AI Message
             val aiMsg = ChatMessageEntity(
-                sessionId = finalSessionId,
-                text = responseText,
+                sessionId = sessionId,
+                text = displayResponse,
                 isUser = false
             )
             chatDao.insertMessage(aiMsg)
+
+            return newContextState
+
         } catch (e: Exception) {
+            // On error, insert error message
             val errorMsg = ChatMessageEntity(
-                sessionId = finalSessionId,
-                text = "Error connecting to AI service.",
+                sessionId = sessionId,
+                text = "I'm having trouble connecting right now. Please try again.",
                 isUser = false
             )
             chatDao.insertMessage(errorMsg)
+            return null
         }
     }
 
