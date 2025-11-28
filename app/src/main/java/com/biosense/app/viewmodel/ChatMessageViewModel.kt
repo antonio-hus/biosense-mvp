@@ -2,10 +2,8 @@ package com.biosense.app.ui.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.biosense.app.health.FakeHealthConnectManager
-import com.biosense.app.health.HealthConnectManager
+import com.biosense.app.service.health.FakeHealthConnectManager
 import com.biosense.app.model.ChatMessage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

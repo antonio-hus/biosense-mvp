@@ -3,9 +3,8 @@ package com.biosense.app.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.biosense.app.health.FakeHealthConnectManager
-import com.biosense.app.health.IHealthConnectManager
-import com.biosense.app.ui.screens.Vital
+import com.biosense.app.service.health.FakeHealthConnectManager
+import com.biosense.app.service.health.IHealthConnectManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

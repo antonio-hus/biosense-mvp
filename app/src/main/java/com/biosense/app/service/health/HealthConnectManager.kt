@@ -1,4 +1,4 @@
-package com.biosense.app.health
+package com.biosense.app.service.health
 
 import android.content.Context
 import android.content.Intent

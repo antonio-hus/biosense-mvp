@@ -1,4 +1,4 @@
-package com.biosense.app.health
+package com.biosense.app.service.health
 
 import androidx.health.connect.client.records.*
 import java.time.Instant
