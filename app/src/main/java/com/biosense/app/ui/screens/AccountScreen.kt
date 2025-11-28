@@ -7,11 +7,9 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -23,7 +21,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -33,6 +30,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.airbnb.lottie.compose.*
 import com.biosense.app.model.Gender
+import com.biosense.app.model.HealthGoal
+import com.biosense.app.model.MotivationStyle
 import com.biosense.app.ui.theme.*
 import com.biosense.app.viewmodel.UserViewModel
 
@@ -44,10 +43,10 @@ fun AccountScreen(
 ) {
     val user by userViewModel.currentUser
     var isEditing by remember { mutableStateOf(false) }
-    var profileImageUri by remember(user.profilePicturePath) { 
-        mutableStateOf(user.profilePicturePath?.let { Uri.parse(it) }) 
+    var profileImageUri by remember(user.profilePicturePath) {
+        mutableStateOf(user.profilePicturePath?.let { Uri.parse(it) })
     }
-    
+
     var name by remember(user) { mutableStateOf(user.name) }
     var age by remember(user) { mutableStateOf(user.age.toString()) }
     var height by remember(user) { mutableStateOf(user.height.toString()) }
@@ -57,16 +56,16 @@ fun AccountScreen(
     var selectedHealthGoal by remember(user) { mutableStateOf(user.healthGoal) }
     var selectedMotivation by remember(user) { mutableStateOf(user.motivationStyle) }
     var whatSenseKnows by remember(user) { mutableStateOf(user.whatSenseKnows) }
-    
+
     val scrollState = rememberScrollState()
-    
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         profileImageUri = uri
         userViewModel.updateProfilePicture(uri?.toString())
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -93,13 +92,14 @@ fun AccountScreen(
                 profileImageUri = profileImageUri,
                 onImagePick = { imagePickerLauncher.launch("image/*") }
             )
-            
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
                     .padding(bottom = 24.dp)
             ) {
+                // --- Personal Information Card ---
                 AnimatedVisibility(
                     visible = true,
                     enter = slideInVertically(
@@ -124,13 +124,15 @@ fun AccountScreen(
                             profession = profession,
                             onProfessionChange = { profession = it },
                             gender = selectedGender,
+                            onGenderChange = { selectedGender = it },
                             isEditing = isEditing
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
+                // --- Health Preferences Card (UPDATED) ---
                 AnimatedVisibility(
                     visible = true,
                     enter = slideInVertically(
@@ -143,16 +145,37 @@ fun AccountScreen(
                         icon = Icons.Default.FavoriteBorder,
                         isEditing = isEditing
                     ) {
-                        Column {
-                            ModernInfoRow("Health Goal", selectedHealthGoal.displayName, Icons.Default.Flag)
-                            Spacer(modifier = Modifier.height(12.dp))
-                            ModernInfoRow("Motivation Style", selectedMotivation.displayName, Icons.Default.Psychology)
+                        if (isEditing) {
+                            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                SelectionDropdown(
+                                    label = "Health Goal",
+                                    options = HealthGoal.values().toList(), // Assuming Enum
+                                    selectedOption = selectedHealthGoal,
+                                    onOptionSelected = { selectedHealthGoal = it },
+                                    displayName = { it.displayName }
+                                )
+
+                                SelectionDropdown(
+                                    label = "Motivation Style",
+                                    options = MotivationStyle.values().toList(), // Assuming Enum
+                                    selectedOption = selectedMotivation,
+                                    onOptionSelected = { selectedMotivation = it },
+                                    displayName = { it.displayName }
+                                )
+                            }
+                        } else {
+                            Column {
+                                ModernInfoRow("Health Goal", selectedHealthGoal.displayName, Icons.Default.Flag)
+                                Spacer(modifier = Modifier.height(12.dp))
+                                ModernInfoRow("Motivation Style", selectedMotivation.displayName, Icons.Default.Psychology)
+                            }
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
+                // --- AI Context Card ---
                 AnimatedVisibility(
                     visible = true,
                     enter = slideInVertically(
@@ -190,10 +213,11 @@ fun AccountScreen(
                         }
                     }
                 }
-                
+
+                // --- Save Button ---
                 if (isEditing) {
                     Spacer(modifier = Modifier.height(32.dp))
-                    
+
                     AnimatedVisibility(
                         visible = isEditing,
                         enter = scaleIn() + fadeIn()
@@ -240,8 +264,57 @@ fun AccountScreen(
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun <T> SelectionDropdown(
+    label: String,
+    options: List<T>,
+    selectedOption: T,
+    onOptionSelected: (T) -> Unit,
+    displayName: (T) -> String
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth(),
+            readOnly = true,
+            value = displayName(selectedOption),
+            onValueChange = {},
+            label = { Text(label) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Secondary,
+                unfocusedBorderColor = SurfaceVariant
+            ),
+            shape = RoundedCornerShape(12.dp)
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(displayName(option)) },
+                    onClick = {
+                        onOptionSelected(option)
+                        expanded = false
+                    },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                )
             }
         }
     }
@@ -262,7 +335,7 @@ private fun ProfileHeader(
             .height(280.dp)
     ) {
         UpdateAnimation()
-        
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -276,7 +349,7 @@ private fun ProfileHeader(
                     )
                 )
         )
-        
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -299,7 +372,7 @@ private fun ProfileHeader(
                     tint = OnBackground
                 )
             }
-            
+
             IconButton(
                 onClick = onEditToggle,
                 modifier = Modifier
@@ -315,7 +388,7 @@ private fun ProfileHeader(
                 )
             }
         }
-        
+
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -335,7 +408,7 @@ private fun ProfileHeader(
                         )
                     )
                     .border(3.dp, Secondary.copy(alpha = 0.3f), CircleShape)
-                    .clickable { onImagePick() },
+                    .clickable { if (isEditing) onImagePick() }, // Only clickable if editing? Optional logic
                 contentAlignment = Alignment.Center
             ) {
                 if (profileImageUri != null) {
@@ -355,7 +428,7 @@ private fun ProfileHeader(
                         tint = Secondary
                     )
                 }
-                
+
                 if (isEditing) {
                     Box(
                         modifier = Modifier
@@ -375,9 +448,9 @@ private fun ProfileHeader(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Text(
                 text = userName.ifEmpty { "Your Name" },
                 fontSize = 24.sp,
@@ -385,7 +458,7 @@ private fun ProfileHeader(
                 color = OnBackground,
                 textAlign = TextAlign.Center
             )
-            
+
             Text(
                 text = "BioSense User",
                 fontSize = 16.sp,
@@ -398,13 +471,15 @@ private fun ProfileHeader(
 
 @Composable
 private fun UpdateAnimation() {
+    // Using a placeholder loader if lottie isn't strictly required or file missing
+    // Re-using your logic
     val composition by rememberLottieComposition(LottieCompositionSpec.Asset("profile_background.lottie"))
     val progress by animateLottieCompositionAsState(
         composition = composition,
         iterations = LottieConstants.IterateForever,
         speed = 0.5f
     )
-    
+
     LottieAnimation(
         composition = composition,
         progress = { progress },
@@ -459,9 +534,9 @@ private fun ModernInfoCard(
                         tint = Secondary
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.width(12.dp))
-                
+
                 Text(
                     text = title,
                     fontWeight = FontWeight.Bold,
@@ -469,9 +544,9 @@ private fun ModernInfoCard(
                     color = OnSurface
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             content()
         }
     }
@@ -490,6 +565,7 @@ private fun PersonalInfoSection(
     profession: String,
     onProfessionChange: (String) -> Unit,
     gender: Gender,
+    onGenderChange: (Gender) -> Unit,
     isEditing: Boolean
 ) {
     Column {
@@ -505,9 +581,9 @@ private fun PersonalInfoSection(
                 ),
                 shape = RoundedCornerShape(12.dp)
             )
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -529,9 +605,9 @@ private fun PersonalInfoSection(
                     shape = RoundedCornerShape(12.dp)
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -544,18 +620,32 @@ private fun PersonalInfoSection(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     shape = RoundedCornerShape(12.dp)
                 )
-                OutlinedTextField(
-                    value = profession,
-                    onValueChange = onProfessionChange,
-                    label = { Text("Profession") },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                )
+
+                // Added Gender dropdown for completeness in edit mode
+                Box(modifier = Modifier.weight(1f)) {
+                    SelectionDropdown(
+                        label = "Gender",
+                        options = Gender.values().toList(),
+                        selectedOption = gender,
+                        onOptionSelected = onGenderChange,
+                        displayName = { it.displayName }
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = profession,
+                onValueChange = onProfessionChange,
+                label = { Text("Profession") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
         } else {
             ModernInfoRow("Name", name.ifEmpty { "Not set" }, Icons.Default.Badge)
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -567,9 +657,9 @@ private fun PersonalInfoSection(
                     ModernInfoRow("Height", if (height == "0") "Not set" else "$height cm", Icons.Default.Height)
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -581,7 +671,7 @@ private fun PersonalInfoSection(
                     GenderInfoRow(gender = gender)
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
             ModernInfoRow("Profession", profession.ifEmpty { "Not set" }, Icons.Default.Work)
         }
@@ -590,8 +680,8 @@ private fun PersonalInfoSection(
 
 @Composable
 private fun ModernInfoRow(
-    label: String, 
-    value: String, 
+    label: String,
+    value: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector
 ) {
     Row(
@@ -634,7 +724,7 @@ private fun GenderInfoRow(gender: Gender) {
             Gender.OTHER -> Icons.Default.Transgender
             Gender.NOT_SPECIFIED -> Icons.Default.QuestionMark
         }
-        
+
         Icon(
             genderIcon,
             contentDescription = null,

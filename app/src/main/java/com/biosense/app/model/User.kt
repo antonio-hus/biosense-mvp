@@ -29,6 +29,7 @@ enum class MotivationStyle(val displayName: String){
 }
 
 enum class HealthGoal(val displayName: String){
+    PREVENTIVE_CARE("Preventive Care"),
     SLEEP_QUALITY("Sleep Quality"),
     ENERGY("Energy"),
     RECOVERY("Recovery"),

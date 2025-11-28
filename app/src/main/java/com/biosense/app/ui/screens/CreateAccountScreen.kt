@@ -762,6 +762,7 @@ fun GoalsStep(
                     ) {
                         Icon(
                             imageVector = when(goal) {
+                                HealthGoal.PREVENTIVE_CARE -> Icons.Default.MonitorHeart
                                 HealthGoal.SLEEP_QUALITY -> Icons.Default.Bedtime
                                 HealthGoal.ENERGY -> Icons.Default.BatteryChargingFull
                                 HealthGoal.RECOVERY -> Icons.Default.Healing
