@@ -209,7 +209,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             - Profession: ${user.profession}
             - Main Goal: ${user.healthGoal}
             
-            CURRENT_CONTEXT (Temporary States/Conditions): 
+            CURRENT_CONTEXT (Temporary States): 
             "${user.whatSenseKnows}"
             
             COMMUNICATION_STYLE: ${user.motivationStyle}
@@ -217,18 +217,25 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             INSTRUCTIONS:
             1. Analyze the provided health data (TOON format) relative to the user's profile.
             2. Provide actionable, style-appropriate advice.
-            3. MANAGE CONTEXT: You have full control over the 'CURRENT_CONTEXT' field.
-               - If the user reports a new condition (e.g., "I have the flu"), ADD it to the context.
-               - If the user says a condition is gone (e.g., "I feel better now"), REMOVE it.
-               - If the context changes in ANY way, output the command: [SET_CONTEXT: <new complete context string>]
-               - If the context is empty or cleared, output: [SET_CONTEXT: ]
+            3. **FORMATTING**: 
+               - Use markdown **bold** for key metrics.
+               - Keep paragraphs short and readable.
+            4. **ACTION CARDS**: If you suggest a concrete action (e.g. log water, start breathing exercise), 
+               you MUST output a card using this EXACT format on a new line:
+               [CARD:Title|Description|Action Label]
+               Example: [CARD:Hydration Alert|You drank less water today.|Log Water]
+            5. **MANAGE CONTEXT**: You have full control over the 'CURRENT_CONTEXT' field.
+               - If user reports new condition (e.g. "I have flu"), ADD it.
+               - If user says it's gone, REMOVE it.
+               - If context changes, output command: [SET_CONTEXT: <new complete context string>]
+               - If context is cleared, output: [SET_CONTEXT: ]
+            6. KEEP IT SHORT: You must always keep it short, only related to the user's question
             
             EXAMPLES:
             - User: "I twisted my ankle." -> Output: ...advice... [SET_CONTEXT: Twisted ankle]
             - (Later) User: "Ankle is fine now." -> Output: ...advice... [SET_CONTEXT: ]
-            - User: "I have a headache." (Context was 'Twisted ankle') -> Output: ...advice... [SET_CONTEXT: Twisted ankle; Headache]
             
-            HEALTH_DATA:
+            HEALTH_DATA_TOON:
             $healthData
         """.trimIndent()
     }
