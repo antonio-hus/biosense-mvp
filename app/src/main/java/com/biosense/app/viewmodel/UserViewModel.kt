@@ -5,10 +5,10 @@ import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
-import com.biosense.app.model.User
-import com.biosense.app.model.Gender
-import com.biosense.app.model.MotivationStyle
-import com.biosense.app.model.HealthGoal
+import com.biosense.app.data.model.User
+import com.biosense.app.data.model.Gender
+import com.biosense.app.data.model.MotivationStyle
+import com.biosense.app.data.model.HealthGoal
 
 class UserViewModel : ViewModel() {
     private val _currentUser = mutableStateOf(User())

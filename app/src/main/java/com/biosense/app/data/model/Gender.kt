@@ -1,4 +1,4 @@
-package com.biosense.app.model
+package com.biosense.app.data.model
 
 enum class Gender(val displayName: String){
     MALE("Male"),

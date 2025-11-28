@@ -24,10 +24,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.imePadding
 import com.airbnb.lottie.compose.*
 import com.biosense.app.ui.theme.*
-import com.biosense.app.model.*
 import com.biosense.app.viewmodel.UserViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.delay
+import com.biosense.app.data.model.Gender
+import com.biosense.app.data.model.HealthGoal
+import com.biosense.app.data.model.MotivationStyle
+import com.biosense.app.data.model.User
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
 @Composable

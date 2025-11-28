@@ -1,4 +1,4 @@
-package com.biosense.app.model
+package com.biosense.app.data.model
 
 enum class MotivationStyle(val displayName: String){
     CASUAL("Casual"),

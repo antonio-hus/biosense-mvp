@@ -1,4 +1,4 @@
-package com.biosense.app.model
+package com.biosense.app.data.model
 
 data class User(
     val id: String = "",
