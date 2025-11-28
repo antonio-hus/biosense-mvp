@@ -1,11 +1,11 @@
 package com.biosense.app.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,6 +28,7 @@ import com.biosense.app.ui.components.ChatInputField
 import com.biosense.app.ui.components.GlassNavBar
 import com.biosense.app.ui.components.Header
 import com.biosense.app.ui.components.TypingIndicator
+import com.biosense.app.ui.components.glassEffect // Make sure this import is correct
 import com.biosense.app.viewmodel.ChatViewModel
 import kotlinx.coroutines.launch
 
@@ -47,16 +48,12 @@ fun ChatScreen(
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    // Initial session check
-    LaunchedEffect(sessions) {
-        if (sessions.isEmpty() && currentSessionId == null) {
-            viewModel.createNewSession()
-        } else if (sessions.isNotEmpty() && currentSessionId == null) {
-            viewModel.selectSession(sessions.first().id)
-        }
+    // Initialize session logic (creates temp session if needed)
+    LaunchedEffect(Unit) {
+        viewModel.initializeSession()
     }
 
-    // Auto-scroll
+    // Auto-scroll to bottom when new message arrives
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.size - 1)
@@ -70,12 +67,18 @@ fun ChatScreen(
                 sessions = sessions,
                 currentSessionId = currentSessionId,
                 onNewChat = {
-                    viewModel.createNewSession()
+                    viewModel.prepareNewTempSession()
                     scope.launch { drawerState.close() }
                 },
                 onSessionSelected = { id ->
                     viewModel.selectSession(id)
                     scope.launch { drawerState.close() }
+                },
+                onDeleteSession = { id ->
+                    viewModel.deleteSession(id)
+                },
+                onRenameSession = { id, newTitle ->
+                    viewModel.renameSession(id, newTitle)
                 }
             )
         },
@@ -87,7 +90,7 @@ fun ChatScreen(
             bottomBar = { GlassNavBar(currentRoute, onNavigate) }
         ) { innerPadding ->
             Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-                // Modified Header with Menu Button
+                // Header with Menu Button
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -96,7 +99,7 @@ fun ChatScreen(
                         onClick = { scope.launch { drawerState.open() } },
                         modifier = Modifier
                             .size(48.dp)
-                            .glassEffect() // Helper extension below
+                            .glassEffect(shape = RoundedCornerShape(16.dp))
                     ) {
                         Icon(Icons.Default.Menu, "History", tint = Color.White)
                     }
@@ -138,16 +141,21 @@ fun GlassDrawerContent(
     sessions: List<ChatSessionEntity>,
     currentSessionId: String?,
     onNewChat: () -> Unit,
-    onSessionSelected: (String) -> Unit
+    onSessionSelected: (String) -> Unit,
+    onDeleteSession: (String) -> Unit,
+    onRenameSession: (String, String) -> Unit
 ) {
+    // State for controlling the rename dialog
+    var showRenameDialog by remember { mutableStateOf<Pair<String, String>?>(null) }
+
     ModalDrawerSheet(
         drawerContainerColor = Color.Transparent,
         modifier = Modifier
             .fillMaxHeight()
             .width(300.dp)
-            .padding(end = 16.dp) // Gap from edge
+            .padding(end = 16.dp) // Visual gap from right edge
     ) {
-        // Glass container for the drawer
+        // Glass container
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -155,7 +163,7 @@ fun GlassDrawerContent(
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFF1A4D5C).copy(alpha = 0.9f), // Darker for legibility
+                            Color(0xFF1A4D5C).copy(alpha = 0.9f),
                             Color(0xFF0F1419).copy(alpha = 0.95f)
                         )
                     )
@@ -170,7 +178,7 @@ fun GlassDrawerContent(
                 .padding(16.dp)
         ) {
             Column {
-                // New Chat Button
+                // "New Chat" Button
                 Button(
                     onClick = onNewChat,
                     modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -180,7 +188,7 @@ fun GlassDrawerContent(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .glassEffect(cornerRadius = 16.dp),
+                            .glassEffect(shape = RoundedCornerShape(16.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -195,45 +203,104 @@ fun GlassDrawerContent(
                 Text("History", color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(12.dp))
 
+                // Session List
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(sessions) { session ->
-                        val isSelected = session.id == currentSessionId
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { onSessionSelected(session.id) }
-                                .background(
-                                    if (isSelected) Color.White.copy(alpha = 0.15f)
-                                    else Color.Transparent
-                                )
-                                .padding(16.dp)
-                        ) {
-                            Text(
-                                text = session.title,
-                                color = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f),
-                                fontSize = 16.sp
-                            )
-                        }
+                        SessionItem(
+                            session = session,
+                            isSelected = session.id == currentSessionId,
+                            onClick = { onSessionSelected(session.id) },
+                            onDelete = { onDeleteSession(session.id) },
+                            onRename = { showRenameDialog = session.id to session.title }
+                        )
                     }
                 }
             }
         }
     }
+
+    // Rename Dialog Overlay
+    if (showRenameDialog != null) {
+        val (sessionId, currentTitle) = showRenameDialog!!
+        var newTitle by remember { mutableStateOf(currentTitle) }
+
+        AlertDialog(
+            onDismissRequest = { showRenameDialog = null },
+            title = { Text("Rename Chat") },
+            text = {
+                OutlinedTextField(
+                    value = newTitle,
+                    onValueChange = { newTitle = it },
+                    singleLine = true,
+                    label = { Text("Title") }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (newTitle.isNotBlank()) {
+                        onRenameSession(sessionId, newTitle)
+                    }
+                    showRenameDialog = null
+                }) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRenameDialog = null }) { Text("Cancel") }
+            }
+        )
+    }
 }
 
-// Reusable Glass Modifier Extension
-fun Modifier.glassEffect(cornerRadius: androidx.compose.ui.unit.Dp = 24.dp) = this
-    .clip(RoundedCornerShape(cornerRadius))
-    .background(
-        brush = Brush.linearGradient(
-            colors = listOf(Color.White.copy(alpha = 0.25f), Color.White.copy(alpha = 0.15f))
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun SessionItem(
+    session: ChatSessionEntity,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    onDelete: () -> Unit,
+    onRename: () -> Unit
+) {
+    var showMenu by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            // Combined clickable handles both regular click and long press
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { showMenu = true }
+            )
+            .background(
+                if (isSelected) Color.White.copy(alpha = 0.15f)
+                else Color.Transparent
+            )
+            .padding(16.dp)
+    ) {
+        Text(
+            text = session.title,
+            color = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f),
+            fontSize = 16.sp
         )
-    )
-    .border(
-        width = 1.dp,
-        brush = Brush.linearGradient(
-            colors = listOf(Color.White.copy(alpha = 0.3f), Color.White.copy(alpha = 0.1f))
-        ),
-        shape = RoundedCornerShape(cornerRadius)
-    )
+
+        // Context Menu (Dropdown)
+        DropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("Rename") },
+                onClick = {
+                    showMenu = false
+                    onRename()
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("Delete") },
+                onClick = {
+                    showMenu = false
+                    onDelete()
+                }
+            )
+        }
+    }
+}

@@ -26,4 +26,14 @@ interface ChatDao {
 
     @Query("SELECT * FROM chat_messages WHERE sessionId = :sessionId ORDER BY timestamp DESC LIMIT 1")
     suspend fun getLastMessage(sessionId: String): ChatMessageEntity?
+
+    @Query("SELECT COUNT(*) FROM chat_sessions")
+    suspend fun getSessionCount(): Int
+
+    @Query("SELECT * FROM chat_sessions WHERE id = :id LIMIT 1")
+    suspend fun getSessionById(id: String): ChatSessionEntity?
+
+    @Query("UPDATE chat_sessions SET title = :title WHERE id = :id")
+    suspend fun updateSessionTitle(id: String, title: String)
+
 }
