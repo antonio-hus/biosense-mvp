@@ -2,13 +2,10 @@ package com.biosense.app.service.health
 
 import androidx.health.connect.client.records.*
 import androidx.health.connect.client.records.metadata.Metadata
-import androidx.health.connect.client.units.BloodGlucose // <-- Added this import
-import androidx.health.connect.client.units.Energy
-import androidx.health.connect.client.units.Mass
-import androidx.health.connect.client.units.Percentage
-import androidx.health.connect.client.units.Pressure
-import androidx.health.connect.client.units.Temperature
-import androidx.health.connect.client.units.Volume
+import androidx.health.connect.client.units.*
+import com.biosense.app.data.model.HealthContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneOffset
@@ -21,6 +18,31 @@ class FakeHealthConnectManager private constructor() : IHealthConnectManager {
     // so we add a small delay to simulate a real data fetch.
     private suspend fun simulateDelay() {
         delay(200) // 200 milliseconds
+    }
+
+    override suspend fun getHealthContext(startTime: Instant, endTime: Instant): HealthContext = coroutineScope {
+        // Fetch all data in parallel for efficiency
+        val steps = async { readSteps(startTime, endTime) }
+        val heartRate = async { readHeartRate(startTime, endTime) }
+        val sleep = async { readSleepSessions(startTime, endTime) }
+        val totalCals = async { readTotalCaloriesBurned(startTime, endTime) }
+        val activeCals = async { readActiveCaloriesBurned(startTime, endTime) }
+        val glucose = async { readBloodGlucose(startTime, endTime) }
+        val bp = async { readBloodPressure(startTime, endTime) }
+        val oxygen = async { readOxygenSaturation(startTime, endTime) }
+
+        HealthContext(
+            start = startTime,
+            end = endTime,
+            steps = steps.await(),
+            heartRate = heartRate.await(),
+            sleep = sleep.await(),
+            totalCalories = totalCals.await(),
+            activeCalories = activeCals.await(),
+            bloodGlucose = glucose.await(),
+            bloodPressure = bp.await(),
+            oxygenSaturation = oxygen.await()
+        )
     }
 
     override suspend fun readSteps(startTime: Instant, endTime: Instant): List<StepsRecord> {

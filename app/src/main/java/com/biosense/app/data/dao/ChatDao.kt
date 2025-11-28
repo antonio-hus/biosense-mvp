@@ -36,4 +36,7 @@ interface ChatDao {
     @Query("UPDATE chat_sessions SET title = :title WHERE id = :id")
     suspend fun updateSessionTitle(id: String, title: String)
 
+    // Fetch latest N messages for a session, ordered by time ascending (oldest -> newest)
+    @Query("SELECT * FROM (SELECT * FROM chat_messages WHERE sessionId = :sessionId ORDER BY timestamp DESC LIMIT :limit) ORDER BY timestamp ASC")
+    suspend fun getRecentMessages(sessionId: String, limit: Int): List<ChatMessageEntity>
 }

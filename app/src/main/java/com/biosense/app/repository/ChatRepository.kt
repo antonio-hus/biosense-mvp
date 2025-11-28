@@ -1,11 +1,10 @@
-package com.biosense.app.data.repository
+package com.biosense.app.repository
 
 import com.biosense.app.data.dao.ChatDao
 import com.biosense.app.data.entity.ChatMessageEntity
 import com.biosense.app.data.entity.ChatSessionEntity
 import com.biosense.app.service.api.GeminiApiService
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import java.util.UUID
 
 class ChatRepository(
@@ -18,45 +17,60 @@ class ChatRepository(
         return chatDao.getMessagesForSession(sessionId)
     }
 
-    // NEW: Generate a unique title based on existing count
+    suspend fun getRecentMessages(sessionId: String, limit: Int = 10): List<ChatMessageEntity> {
+        return chatDao.getRecentMessages(sessionId, limit)
+    }
+
     suspend fun generateNewSessionTitle(): String {
         val count = chatDao.getSessionCount() + 1
         return "Conversation #$count"
     }
 
-    // NEW: Create session explicitly
-    suspend fun createSession(title: String): String {
-        val newSession = ChatSessionEntity(id = UUID.randomUUID().toString(), title = title)
+    suspend fun createSessionWithId(id: String, title: String) {
+        val newSession = ChatSessionEntity(id = id, title = title)
         chatDao.insertSession(newSession)
-        return newSession.id
     }
 
-    // UPDATED: Handles "First Message" logic
-    suspend fun sendMessage(sessionId: String, text: String, isFirstMessage: Boolean) {
+    suspend fun sendMessage(
+        sessionId: String,
+        displayText: String,
+        aiPrompt: String,
+        isFirstMessage: Boolean
+    ) {
         var finalSessionId = sessionId
 
-        // If this is the very first message of a "temporary" session, create it now
         if (isFirstMessage) {
-            // Double check if it exists, if not create it
-            val sessionExists = chatDao.getSessionById(sessionId) != null
-            if (!sessionExists) {
+            val existing = chatDao.getSessionById(sessionId)
+            if (existing == null) {
                 val title = generateNewSessionTitle()
-                val newSession = ChatSessionEntity(id = sessionId, title = title)
-                chatDao.insertSession(newSession)
+                createSessionWithId(sessionId, title)
             }
         }
 
-        // 1. Save User Message
-        val userMsg = ChatMessageEntity(sessionId = finalSessionId, text = text, isUser = true)
+        // 1) Save user-facing message
+        val userMsg = ChatMessageEntity(
+            sessionId = finalSessionId,
+            text = displayText,
+            isUser = true
+        )
         chatDao.insertMessage(userMsg)
 
-        // 2. AI Service Call
+        // 2) Call AI with full prompt (context + question)
         try {
-            val responseText = apiService.generateResponse(text)
-            val aiMsg = ChatMessageEntity(sessionId = finalSessionId, text = responseText, isUser = false)
+            val responseText = apiService.generateResponse(aiPrompt)
+
+            val aiMsg = ChatMessageEntity(
+                sessionId = finalSessionId,
+                text = responseText,
+                isUser = false
+            )
             chatDao.insertMessage(aiMsg)
         } catch (e: Exception) {
-            val errorMsg = ChatMessageEntity(sessionId = finalSessionId, text = "Error: ${e.localizedMessage}", isUser = false)
+            val errorMsg = ChatMessageEntity(
+                sessionId = finalSessionId,
+                text = "Error connecting to AI service.",
+                isUser = false
+            )
             chatDao.insertMessage(errorMsg)
         }
     }

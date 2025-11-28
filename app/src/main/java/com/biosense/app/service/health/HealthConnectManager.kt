@@ -10,6 +10,7 @@ import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.*
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
+import com.biosense.app.data.model.HealthContext
 import java.time.Instant
 import kotlin.reflect.KClass
 
@@ -46,6 +47,21 @@ class HealthConnectManager private constructor(context: Context) : IHealthConnec
         } catch (e: Exception) {
             emptySet()
         }
+    }
+
+    override suspend fun getHealthContext(startTime: Instant, endTime: Instant): HealthContext {
+        return HealthContext(
+            start = startTime,
+            end = endTime,
+            steps = readSteps(startTime, endTime),
+            heartRate = readHeartRate(startTime, endTime),
+            sleep = readSleepSessions(startTime, endTime),
+            totalCalories = readTotalCaloriesBurned(startTime, endTime),
+            activeCalories = readActiveCaloriesBurned(startTime, endTime),
+            bloodGlucose = readBloodGlucose(startTime, endTime),
+            bloodPressure = readBloodPressure(startTime, endTime),
+            oxygenSaturation = readOxygenSaturation(startTime, endTime)
+        )
     }
 
     override suspend fun readSteps(startTime: Instant, endTime: Instant): List<StepsRecord> {

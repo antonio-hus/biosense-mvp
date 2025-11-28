@@ -1,9 +1,15 @@
 package com.biosense.app.service.health
 
 import androidx.health.connect.client.records.*
+import com.biosense.app.data.model.HealthContext
 import java.time.Instant
 
 interface IHealthConnectManager {    suspend fun readSteps(startTime: Instant, endTime: Instant): List<StepsRecord>
+
+    // Health Context Overview
+    suspend fun getHealthContext(startTime: Instant, endTime: Instant): HealthContext
+
+    // Health Context Details
     suspend fun readHeartRate(startTime: Instant, endTime: Instant): List<HeartRateRecord>
     suspend fun readActiveCaloriesBurned(startTime: Instant, endTime: Instant): List<ActiveCaloriesBurnedRecord>
     suspend fun readBloodGlucose(startTime: Instant, endTime: Instant): List<BloodGlucoseRecord>
