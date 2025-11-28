@@ -3,13 +3,13 @@ package com.biosense.app.repository
 import com.biosense.app.data.dao.ChatDao
 import com.biosense.app.data.entity.ChatMessageEntity
 import com.biosense.app.data.entity.ChatSessionEntity
-import com.biosense.app.service.api.GeminiApiService
+import com.biosense.app.service.api.IGeminiApiService
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 class ChatRepository(
     private val chatDao: ChatDao,
-    private val apiService: GeminiApiService
+    private val apiService: IGeminiApiService
 ) {
     val allSessions: Flow<List<ChatSessionEntity>> = chatDao.getAllSessions()
 

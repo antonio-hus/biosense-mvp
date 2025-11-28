@@ -8,9 +8,10 @@ import com.biosense.app.data.entity.ChatMessageEntity
 import com.biosense.app.data.entity.ChatSessionEntity
 import com.biosense.app.repository.ChatRepository
 import com.biosense.app.data.serializer.HealthContextSerializer
-import com.biosense.app.service.api.MockGeminiService
+import com.biosense.app.service.api.GeminiService
 import com.biosense.app.service.health.FakeHealthConnectManager
 import com.biosense.app.service.health.IHealthConnectManager
+import com.biosense.app.BuildConfig
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -25,14 +26,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val serializer: HealthContextSerializer
 
     init {
-        // Initialize dependencies (In a real app, use Hilt for injection)
+        // Initialize dependencies
         val database = BiosenseDatabase.getDatabase(application)
 
         // Using Fake manager for now as per your setup
         healthConnectManager = FakeHealthConnectManager.getInstance()
 
         // Initialize API service and Repository
-        val apiService = MockGeminiService()
+        val apiService = GeminiService(apiKey = BuildConfig.GEMINI_API_KEY)
         repository = ChatRepository(database.chatDao(), apiService)
 
         // Initialize Serializer
