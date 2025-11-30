@@ -39,6 +39,7 @@ import com.biosense.app.viewmodel.UserViewModel
 @Composable
 fun AccountScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToNotifications: () -> Unit = {},
     userViewModel: UserViewModel = viewModel()
 ) {
     val user by userViewModel.currentUser
@@ -211,6 +212,62 @@ fun AccountScreen(
                                 lineHeight = 24.sp
                             )
                         }
+                    }
+                }
+
+                // Notification Settings Button - Always visible
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onNavigateToNotifications() },
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Surface.copy(alpha = 0.9f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(
+                                    Primary.copy(alpha = 0.1f),
+                                    CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.Notifications,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = Primary
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Notification Settings",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = OnSurface
+                            )
+                            Text(
+                                text = "Configure health alerts",
+                                fontSize = 14.sp,
+                                color = OnSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                        Icon(
+                            Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = OnSurface.copy(alpha = 0.5f)
+                        )
                     }
                 }
 

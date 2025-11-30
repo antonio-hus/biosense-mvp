@@ -76,6 +76,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
     ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
