@@ -125,8 +125,8 @@ class NotificationSettingsViewModel(application: Application) : AndroidViewModel
                 _settings.value = newSettings
                 settingsDao.insertOrUpdate(newSettings)
                 
-                // Reschedule notifications with new settings
-                NotificationScheduler(getApplication()).schedulePeriodicChecks()
+                // Reschedule notifications with new settings (force replace to update interval)
+                NotificationScheduler(getApplication()).schedulePeriodicChecks(forceReplace = true)
             } catch (e: Exception) {
                 e.printStackTrace()
             }

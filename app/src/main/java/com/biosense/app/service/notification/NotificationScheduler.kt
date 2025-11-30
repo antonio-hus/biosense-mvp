@@ -26,8 +26,11 @@ class NotificationScheduler(private val context: Context) {
      * Should be called when:
      * - App starts
      * - Notification settings change
+     * 
+     * @param forceReplace If true, always replace existing work (use when settings change).
+     *                     If false, keep existing work if it's already scheduled (use on app start).
      */
-    suspend fun schedulePeriodicChecks() {
+    suspend fun schedulePeriodicChecks(forceReplace: Boolean = false) {
         val settings = settingsDao.getSettings().first() ?: return
 
         if (!settings.enabled) {
@@ -45,15 +48,22 @@ class NotificationScheduler(private val context: Context) {
         )
             .build()
 
-        // Use REPLACE to update the schedule when settings change (e.g., interval changes)
-        // This ensures the worker runs at the user's chosen interval
+        // Determine policy based on forceReplace flag
+        // If forceReplace is false (app start), use KEEP to avoid immediate execution
+        // If forceReplace is true (settings changed), use REPLACE to update interval
+        val policy = if (forceReplace) {
+            ExistingPeriodicWorkPolicy.REPLACE // Replace when settings change
+        } else {
+            ExistingPeriodicWorkPolicy.KEEP // Keep existing schedule to avoid immediate execution on app start
+        }
+        
         workManager.enqueueUniquePeriodicWork(
             WORK_NAME,
-            ExistingPeriodicWorkPolicy.REPLACE, // Replace existing work to update interval
+            policy,
             workRequest
         )
         
-        android.util.Log.d("NotificationScheduler", "Scheduled periodic health checks every $intervalMinutes minutes")
+        android.util.Log.d("NotificationScheduler", "Scheduled periodic health checks every $intervalMinutes minutes (policy: $policy)")
     }
 
     /**

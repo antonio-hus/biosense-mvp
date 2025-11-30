@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -339,19 +340,33 @@ fun NotificationSettingsScreen(
                                 Spacer(modifier = Modifier.height(12.dp))
                                 
                                 val intervalOptions = listOf(15, 30, 60, 120, 240)
-                                val intervalLabels = listOf("15 min", "30 min", "1 hour", "2 hours", "4 hours")
+                                val intervalLabels = listOf("15m", "30m", "1h", "2h", "4h")
                                 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     intervalOptions.forEachIndexed { index, minutes ->
-                                        FilterChip(
-                                            selected = settings.checkIntervalMinutes == minutes,
-                                            onClick = { viewModel.setCheckIntervalMinutes(minutes) },
-                                            label = { Text(intervalLabels[index], fontSize = 12.sp) },
+                                        Box(
                                             modifier = Modifier.weight(1f)
-                                        )
+                                        ) {
+                                            FilterChip(
+                                                selected = settings.checkIntervalMinutes == minutes,
+                                                onClick = { viewModel.setCheckIntervalMinutes(minutes) },
+                                                label = { 
+                                                    Text(
+                                                        intervalLabels[index], 
+                                                        fontSize = 11.sp,
+                                                        textAlign = TextAlign.Center,
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        maxLines = 1
+                                                    ) 
+                                                },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(36.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }
