@@ -19,6 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.biosense.app.service.health.HealthConnectManager
+import com.biosense.app.service.notification.NotificationScheduler
 import kotlinx.coroutines.launch
 import com.biosense.app.ui.components.GradientBackground
 import com.biosense.app.ui.screens.*
@@ -50,6 +51,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+        // Initialize notification scheduler
+        lifecycleScope.launch {
+            try {
+                NotificationScheduler(this@MainActivity).schedulePeriodicChecks()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
 
         setContent {
             BiosenseTheme {
@@ -157,6 +166,9 @@ fun MainContent(
                     onProfileClick = {
                         navController.navigate("account")
                     },
+                    onNavigateToNotificationHistory = {
+                        navController.navigate("notification_history")
+                    },
                     viewModel = todayViewModel
                 )
             }
@@ -218,7 +230,27 @@ fun MainContent(
                     onNavigateBack = {
                         navController.popBackStack()
                     },
+                    onNavigateToNotifications = {
+                        navController.navigate("notification_settings")
+                    },
                     userViewModel = userViewModel
+                )
+            }
+            composable("notification_settings") {
+                NotificationSettingsScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToHistory = {
+                        navController.navigate("notification_history")
+                    }
+                )
+            }
+            composable("notification_history") {
+                NotificationHistoryScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
                 )
             }
         }
