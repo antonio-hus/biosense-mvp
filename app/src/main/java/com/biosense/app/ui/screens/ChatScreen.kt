@@ -13,13 +13,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,6 +43,7 @@ fun ChatScreen(
     onNavigate: (String) -> Unit,
     onProfileClick: () -> Unit,
     viewModel: ChatViewModel = viewModel(),
+    initialPrompt: String? = null,
     suggestedQuestions: List<String> = listOf(
         "How is my sleep quality this week?",
         "Analyze my heart rate trends.",
@@ -95,7 +99,9 @@ fun ChatScreen(
             Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                 // Header
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(
@@ -106,8 +112,15 @@ fun ChatScreen(
                     ) {
                         Icon(Icons.Default.Menu, "History", tint = Color.White)
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Header(title = "Advisor", onProfileClick = onProfileClick)
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Text(
+                        text = "Advisor",
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 }
 
                 // Content Area
@@ -144,7 +157,7 @@ fun ChatScreen(
                 }
 
                 // Input Field
-                var text by remember { mutableStateOf("") }
+                var text by remember { mutableStateOf(initialPrompt ?: "") }
                 ChatInputField(
                     messageText = text,
                     onMessageChange = { text = it },
@@ -167,34 +180,75 @@ fun EmptyChatSuggestions(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp),
+            .padding(horizontal = 24.dp, vertical = 32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Title
         Text(
             text = "How can I help you today?",
-            fontSize = 20.sp,
-            color = Color.White.copy(alpha = 0.8f),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(bottom = 32.dp)
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            textAlign = TextAlign.Center
         )
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Ask me about your health metrics or get personalized insights",
+            fontSize = 15.sp,
+            color = Color.White.copy(alpha = 0.75f),
+            textAlign = TextAlign.Center,
+            lineHeight = 22.sp
+        )
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        // Suggestions - matching app style
         suggestions.forEach { suggestion ->
-            Box(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 6.dp)
-                    .glassEffect(shape = RoundedCornerShape(16.dp))
-                    .clickable { onSuggestionClick(suggestion) }
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
+                    .padding(vertical = 8.dp)
+                    .shadow(
+                        elevation = 4.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        ambientColor = Color.Black.copy(alpha = 0.1f),
+                        spotColor = Color.Black.copy(alpha = 0.1f)
+                    )
+                    .clickable { onSuggestionClick(suggestion) },
+                shape = RoundedCornerShape(16.dp),
+                color = Color.Transparent
             ) {
-                Text(
-                    text = suggestion,
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Center
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = 0.15f),
+                                    Color.White.copy(alpha = 0.08f)
+                                )
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Color.White.copy(alpha = 0.25f),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .padding(20.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(
+                        text = suggestion,
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        lineHeight = 22.sp
+                    )
+                }
             }
         }
     }

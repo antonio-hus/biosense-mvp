@@ -31,6 +31,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -57,7 +59,6 @@ fun TrendsScreen(
     trendsViewModel: TrendsViewModel = viewModel()
 ) {
     val isLoading by trendsViewModel.isLoading.collectAsState()
-    val vitalTrends by trendsViewModel.vitalTrends.collectAsState()
     val metricTrends by trendsViewModel.metricTrends.collectAsState()
     val pinnedNames by todayViewModel.pinnedMetricNames.collectAsState()
 
@@ -86,7 +87,8 @@ fun TrendsScreen(
                 onProfileClick = onProfileClick
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Content padding
+            Spacer(modifier = Modifier.height(12.dp))
 
             if (isLoading) {
                 Box(
@@ -96,35 +98,45 @@ fun TrendsScreen(
                     CircularProgressIndicator(color = Color.White)
                 }
             } else {
-                TrendsSection(title = "Vitals Trends", subtitle = "Last 7 days") {
-                    vitalTrends.forEach { trend ->
-                        TrendCard(
-                            title = trend.name,
-                            unit = null,
-                            points = trend.points.map { it.toDouble() }
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                    }
+                // Header section - matching registration style
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                ) {
+                    Text(
+                        text = "Your Health Journey",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Track your progress over the last 7 days",
+                        fontSize = 16.sp,
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontWeight = FontWeight.Medium
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                TrendsSection(title = "Pinned Metrics", subtitle = "Last 7 days") {
+                // Trends content
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     if (metricTrends.isEmpty()) {
-                        Text(
-                            text = "No pinned metrics",
-                            color = Color.White.copy(alpha = 0.8f),
-                            fontSize = 14.sp,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
+                        EmptyTrendsCard()
                     } else {
                         metricTrends.forEach { mt ->
-                            TrendCard(
+                            EnhancedTrendCard(
                                 title = mt.name,
                                 unit = mt.unit,
                                 points = mt.points
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
                 }
@@ -136,85 +148,177 @@ fun TrendsScreen(
 }
 
 @Composable
-private fun TrendsSection(
-    title: String,
-    subtitle: String,
-    content: @Composable () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-    ) {
-        Text(
-            text = title,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-        Text(
-            text = subtitle,
-            fontSize = 14.sp,
-            color = Color.White.copy(alpha = 0.7f)
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        content()
-    }
-}
-
-@Composable
-private fun TrendCard(
-    title: String,
-    unit: String?,
-    points: List<Double>
-) {
+private fun EmptyTrendsCard() {
     Surface(
         modifier = Modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+            .fillMaxWidth()
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(16.dp),
+                ambientColor = Color.Black.copy(alpha = 0.1f),
+                spotColor = Color.Black.copy(alpha = 0.1f)
+            ),
+        shape = RoundedCornerShape(16.dp),
         color = Color.Transparent
     ) {
         Box(
             modifier = Modifier
+                .fillMaxWidth()
                 .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.2f),
-                            Color.White.copy(alpha = 0.1f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(20.dp)
+                    color = Color.White.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(16.dp)
                 )
                 .border(
                     width = 1.dp,
-                    color = Color.White.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(20.dp)
+                    color = Color.White.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(16.dp)
                 )
-                .padding(16.dp)
+                .padding(24.dp)
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
             ) {
+                Text(
+                    text = "📊",
+                    fontSize = 48.sp
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "No metrics to track yet",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Pin metrics from the Today screen to see trends",
+                    fontSize = 14.sp,
+                    color = Color.White.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EnhancedTrendCard(
+    title: String,
+    unit: String?,
+    points: List<Double>
+) {
+    val currentValue = points.lastOrNull() ?: 0.0
+    val previousValue = points.getOrNull(points.size - 2) ?: currentValue
+    val change = currentValue - previousValue
+    val changePercent = if (previousValue != 0.0) (change / previousValue * 100) else 0.0
+    val isPositive = change >= 0
+    val changeColor = if (isPositive) Color(0xFF4CAF50) else Color(0xFFEF5350)
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(16.dp),
+                ambientColor = Color.Black.copy(alpha = 0.1f),
+                spotColor = Color.Black.copy(alpha = 0.1f)
+            ),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.Transparent
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    color = Color.White.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .border(
+                    width = 1.dp,
+                    color = Color.White.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(20.dp)
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Header Row - matching registration style
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = title,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
-                    if (unit != null) {
+                    Column {
                         Text(
-                            text = unit,
-                            fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.8f)
+                            text = title,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        if (unit != null) {
+                            Text(
+                                text = "Measured in $unit",
+                                fontSize = 14.sp,
+                                color = Color.White.copy(alpha = 0.7f),
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    }
+
+                    // Change indicator - matching registration badge style
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = changeColor.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = changeColor.copy(alpha = 0.3f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = "${if (isPositive) "+" else ""}${String.format("%.1f", changePercent)}%",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
                         )
                     }
                 }
+
+                // Current value display
+                Column {
+                    Text(
+                        text = "Current Value",
+                        fontSize = 12.sp,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "${String.format("%.1f", currentValue)} ${unit ?: ""}".trim(),
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                // Sparkline chart
                 Sparkline(points = points)
+
+                // 7-day label
+                Text(
+                    text = "Last 7 days",
+                    fontSize = 12.sp,
+                    color = Color.White.copy(alpha = 0.7f),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
@@ -227,25 +331,37 @@ private fun Sparkline(points: List<Double>) {
     val max = safePoints.maxOrNull() ?: 1.0
     val range = if (max - min < 1e-6) 1.0 else (max - min)
 
-    val strokeColor = Color(0xFFFFD54F).copy(alpha = 0.9f)
-    val fillColor = Color(0xFFFFD54F).copy(alpha = 0.25f)
-    val gridColor = Color.White.copy(alpha = 0.15f)
+    val strokeColor = Color(0xFF64B5F6).copy(alpha = 1f) // Vibrant blue
+    val fillColorTop = Color(0xFF64B5F6).copy(alpha = 0.4f)
+    val fillColorBottom = Color(0xFF64B5F6).copy(alpha = 0.05f)
+    val gridColor = Color.White.copy(alpha = 0.12f)
+    val pointColor = Color(0xFF1976D2).copy(alpha = 0.9f)
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp)
+            .height(140.dp)
+            .background(
+                color = Color.White.copy(alpha = 0.05f),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = Color.White.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(12.dp)
     ) {
         Canvas(modifier = Modifier.matchParentSize()) {
-            // Grid lines (horizontal)
-            val gridLines = 3
+            // Grid lines (horizontal) - subtle
+            val gridLines = 4
             for (i in 0..gridLines) {
                 val y = size.height * i / gridLines
                 drawLine(
                     color = gridColor,
                     start = Offset(0f, y),
                     end = Offset(size.width, y),
-                    strokeWidth = 1f
+                    strokeWidth = 0.5f
                 )
             }
 
@@ -253,10 +369,14 @@ private fun Sparkline(points: List<Double>) {
             val stepX = if (safePoints.size > 1) size.width / (safePoints.size - 1) else 0f
             val path = Path()
             val areaPath = Path()
+            val pointPositions = mutableListOf<Offset>()
+
             safePoints.forEachIndexed { idx, v ->
                 val x = stepX * idx
                 val yNorm = (v - min) / range
                 val y = size.height - (yNorm * size.height).toFloat()
+                pointPositions.add(Offset(x, y))
+
                 if (idx == 0) {
                     path.moveTo(x, y)
                     areaPath.moveTo(x, size.height)
@@ -266,22 +386,46 @@ private fun Sparkline(points: List<Double>) {
                     areaPath.lineTo(x, y)
                 }
             }
+
             // Close area
             areaPath.lineTo(size.width, size.height)
             areaPath.close()
 
-            // Fill area
+            // Fill area with gradient
             drawPath(
                 path = areaPath,
-                color = fillColor
+                brush = Brush.verticalGradient(
+                    colors = listOf(fillColorTop, fillColorBottom),
+                    startY = 0f,
+                    endY = size.height
+                )
             )
 
-            // Stroke line
+            // Stroke line with glow effect
+            drawPath(
+                path = path,
+                color = strokeColor.copy(alpha = 0.3f),
+                style = Stroke(width = 10f, cap = StrokeCap.Round)
+            )
             drawPath(
                 path = path,
                 color = strokeColor,
-                style = Stroke(width = 6f, cap = StrokeCap.Round)
+                style = Stroke(width = 4f, cap = StrokeCap.Round)
             )
+
+            // Draw data points
+            pointPositions.forEach { position ->
+                drawCircle(
+                    color = Color.White,
+                    radius = 8f,
+                    center = position
+                )
+                drawCircle(
+                    color = pointColor,
+                    radius = 5f,
+                    center = position
+                )
+            }
         }
     }
 }

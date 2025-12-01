@@ -3,8 +3,10 @@ package com.biosense.app.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.biosense.app.data.model.*
 import com.biosense.app.service.health.FakeHealthConnectManager
 import com.biosense.app.service.health.IHealthConnectManager
+import com.biosense.app.ui.screens.HealthScoreBreakdown
 import com.biosense.app.ui.screens.PinnedMetric
 import com.biosense.app.ui.screens.Vital
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +32,28 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
     // Pin state management for additional metrics
     private val _pinnedMetricNames = MutableStateFlow<Set<String>>(emptySet())
     val pinnedMetricNames: StateFlow<Set<String>> = _pinnedMetricNames.asStateFlow()
-    
+
+    // Track if defaults have been set
+    private var defaultsSet = false
+
+    // Daily Health Score (0-100)
+    private val _dailyHealthScore = MutableStateFlow(0)
+    val dailyHealthScore: StateFlow<Int> = _dailyHealthScore.asStateFlow()
+
+    private val _healthScoreBreakdown = MutableStateFlow(HealthScoreBreakdown())
+    val healthScoreBreakdown: StateFlow<HealthScoreBreakdown> = _healthScoreBreakdown.asStateFlow()
+
+    // Gamification State (minimal - just for challenges/streak)
+    private val _userProgress = MutableStateFlow(GamificationData.getSampleProgress())
+    val userProgress: StateFlow<UserProgress> = _userProgress.asStateFlow()
+
+    private val _dailyChallenges = MutableStateFlow(GamificationData.getSampleChallenges())
+    val dailyChallenges: StateFlow<List<DailyChallenge>> = _dailyChallenges.asStateFlow()
+
+    private val _healthScore = MutableStateFlow(GamificationData.getSampleHealthScore())
+    val healthScore: StateFlow<HealthScore> = _healthScore.asStateFlow()
+
+
     // Store raw data for additional metrics
     private val _heartRateData = MutableStateFlow<List<androidx.health.connect.client.records.HeartRateRecord>>(emptyList())
     private val _sleepData = MutableStateFlow<List<androidx.health.connect.client.records.SleepSessionRecord>>(emptyList())
@@ -51,11 +74,31 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
         loadTodayData()
     }
     
+    fun setDefaultPinnedMetrics() {
+        if (!defaultsSet && _pinnedMetricNames.value.isEmpty()) {
+            defaultsSet = true
+            // Set default pinned metrics: Sleep-related (Body Temperature), Heart Rate, Activity-related (Steps via Active Calories)
+            val defaults = setOf(
+                "Heart Rate",
+                "Body Temperature", // Sleep-related metric
+                "Active Calories"   // Activity-related metric
+            )
+            _pinnedMetricNames.value = defaults
+
+            // Load data if not already loaded
+            if (_heartRateData.value.isEmpty()) {
+                loadTodayData()
+            } else {
+                updatePinnedMetrics()
+            }
+        }
+    }
+
     fun pinMetric(metricName: String) {
         val currentPinned = _pinnedMetricNames.value.toMutableSet()
         currentPinned.add(metricName)
         _pinnedMetricNames.value = currentPinned
-        
+
         // Ensure data is loaded before updating pinned metrics
         if (_heartRateData.value.isEmpty()) {
             loadTodayData()
@@ -244,7 +287,10 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
                 
                 // Update pinned metrics based on current pin state
                 updatePinnedMetrics()
-                
+
+                // Calculate Daily Health Score
+                calculateDailyHealthScore(heartRateData, sleepData, stepsData, bloodPressureData)
+
             } catch (e: Exception) {
                 // Handle error - for now, use empty lists
                 _vitals.value = emptyList()
@@ -253,6 +299,30 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
                 _isLoading.value = false
             }
         }
+    }
+
+    private fun calculateDailyHealthScore(
+        heartRateData: List<androidx.health.connect.client.records.HeartRateRecord>,
+        sleepData: List<androidx.health.connect.client.records.SleepSessionRecord>,
+        stepsData: List<androidx.health.connect.client.records.StepsRecord>,
+        bloodPressureData: List<androidx.health.connect.client.records.BloodPressureRecord>
+    ) {
+        // Calculate component scores
+        val sleepScore = calculateSleepScore(sleepData)
+        val activityScore = calculateActivityScore(stepsData)
+        val heartScore = calculateHeartRateScore(heartRateData)
+        val recoveryScore = if (bloodPressureData.isNotEmpty()) 85 else 75
+
+        // Overall health score (weighted average)
+        val overall = ((sleepScore * 0.3) + (activityScore * 0.25) + (heartScore * 0.25) + (recoveryScore * 0.2)).toInt()
+
+        _dailyHealthScore.value = overall
+        _healthScoreBreakdown.value = HealthScoreBreakdown(
+            sleep = sleepScore,
+            activity = activityScore,
+            heartHealth = heartScore,
+            recovery = recoveryScore
+        )
     }
     
     private fun processVitalsData(

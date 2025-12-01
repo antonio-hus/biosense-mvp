@@ -69,30 +69,56 @@ fun SearchScreen(
         ) {
             // Header
             Header(
-                title = "Search Metrics",
+                title = "Search",
                 onProfileClick = onProfileClick
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-            
+            // Content padding
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+            ) {
+                // Section header - matching registration style
+                Text(
+                    text = "Search Metrics",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Find and pin your health metrics",
+                    fontSize = 16.sp,
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontWeight = FontWeight.Medium
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
             // Search Bar
             SearchBar(
                 query = searchQuery,
                 onQueryChange = { searchQuery = it }
             )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             // Search Results
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(horizontal = 16.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(horizontal = 24.dp)
             ) {
                 items(filteredMetrics) { metric ->
                     MetricSearchItem(
                         metricName = metric,
                         isPinned = pinnedMetricNames.contains(metric),
-                        onTogglePin = { 
+                        onTogglePin = {
                             if (pinnedMetricNames.contains(metric)) {
                                 viewModel.unpinMetric(metric)
                             } else {
@@ -114,46 +140,65 @@ fun SearchBar(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 24.dp)
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(12.dp),
+                ambientColor = Color.Black.copy(alpha = 0.1f),
+                spotColor = Color.Black.copy(alpha = 0.1f)
+            ),
         shape = RoundedCornerShape(12.dp),
-        color = Color.White.copy(alpha = 0.15f),
-        tonalElevation = 2.dp
+        color = Color.Transparent
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .background(
+                    color = Color.White.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .border(
+                    width = 1.dp,
+                    color = Color.White.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(12.dp)
+                )
         ) {
-            Icon(
-                imageVector = Icons.Filled.Search,
-                contentDescription = "Search",
-                tint = Color.White.copy(alpha = 0.7f),
-                modifier = Modifier.size(20.dp)
-            )
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
-            BasicTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                textStyle = TextStyle(
-                    color = Color.White,
-                    fontSize = 16.sp
-                ),
-                cursorBrush = SolidColor(Color.White),
-                modifier = Modifier.fillMaxWidth(),
-                decorationBox = { innerTextField ->
-                    if (query.isEmpty()) {
-                        Text(
-                            text = "Search for metrics...",
-                            color = Color.White.copy(alpha = 0.5f),
-                            fontSize = 16.sp
-                        )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = "Search",
+                    tint = Color.White.copy(alpha = 0.7f),
+                    modifier = Modifier.size(24.dp)
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                BasicTextField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    textStyle = TextStyle(
+                        color = Color.White,
+                        fontSize = 16.sp
+                    ),
+                    cursorBrush = SolidColor(Color.White),
+                    modifier = Modifier.fillMaxWidth(),
+                    decorationBox = { innerTextField ->
+                        if (query.isEmpty()) {
+                            Text(
+                                text = "Search for metrics...",
+                                color = Color.White.copy(alpha = 0.5f),
+                                fontSize = 16.sp
+                            )
+                        }
+                        innerTextField()
                     }
-                    innerTextField()
-                }
-            )
+                )
+            }
         }
     }
 }
@@ -164,16 +209,18 @@ fun MetricSearchItem(
     isPinned: Boolean,
     onTogglePin: () -> Unit
 ) {
+    val accentColor = if (isPinned) Color(0xFFFFC107) else Color(0xFF64B5F6)
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(20.dp),
+                elevation = 4.dp,
+                shape = RoundedCornerShape(16.dp),
                 ambientColor = Color.Black.copy(alpha = 0.1f),
                 spotColor = Color.Black.copy(alpha = 0.1f)
             ),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(16.dp),
         color = Color.Transparent
     ) {
         Box(
@@ -182,16 +229,16 @@ fun MetricSearchItem(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.2f),
-                            Color.White.copy(alpha = 0.1f)
+                            accentColor.copy(alpha = 0.15f),
+                            accentColor.copy(alpha = 0.05f)
                         )
                     ),
-                    shape = RoundedCornerShape(20.dp)
+                    shape = RoundedCornerShape(16.dp)
                 )
                 .border(
                     width = 1.dp,
-                    color = Color.White.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(20.dp)
+                    color = accentColor.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(16.dp)
                 )
         ) {
             Row(
@@ -201,27 +248,18 @@ fun MetricSearchItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Left side with circular icon and text
+                // Left side with icon and text
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    // Circular metric icon
+                    // Metric icon - matching registration style
                     Box(
                         modifier = Modifier
                             .size(48.dp)
                             .background(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        Color.White.copy(alpha = 0.3f),
-                                        Color.White.copy(alpha = 0.1f)
-                                    )
-                                ),
-                                shape = CircleShape
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = Color.White.copy(alpha = 0.4f),
+                                color = accentColor.copy(alpha = 0.2f),
                                 shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
@@ -233,7 +271,7 @@ fun MetricSearchItem(
                             color = Color.White
                         )
                     }
-                    
+
                     Column {
                         Text(
                             text = metricName,
@@ -242,47 +280,32 @@ fun MetricSearchItem(
                             color = Color.White
                         )
                         Text(
-                            text = "Health Metric",
-                            fontSize = 12.sp,
+                            text = if (isPinned) "Pinned" else "Health Metric",
+                            fontSize = 14.sp,
                             color = Color.White.copy(alpha = 0.7f)
                         )
                     }
                 }
-                
-                // Right side with circular pin button
-                Box(
+
+                // Right side with pin button
+                IconButton(
+                    onClick = onTogglePin,
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(40.dp)
                         .background(
-                            brush = if (isPinned) {
-                                Brush.radialGradient(
-                                    colors = listOf(
-                                        Color.Yellow.copy(alpha = 0.8f),
-                                        Color.Yellow.copy(alpha = 0.6f)
-                                    )
-                                )
-                            } else {
-                                Brush.radialGradient(
-                                    colors = listOf(
-                                        Color.White.copy(alpha = 0.2f),
-                                        Color.White.copy(alpha = 0.1f)
-                                    )
-                                )
-                            },
+                            color = if (isPinned) accentColor.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.15f),
                             shape = CircleShape
                         )
                         .border(
                             width = 1.dp,
-                            color = if (isPinned) Color.Yellow.copy(alpha = 0.8f) else Color.White.copy(alpha = 0.3f),
+                            color = if (isPinned) accentColor.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.3f),
                             shape = CircleShape
                         )
-                        .clickable { onTogglePin() },
-                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.PushPin,
                         contentDescription = if (isPinned) "Unpin" else "Pin",
-                        tint = if (isPinned) Color.White else Color.White.copy(alpha = 0.8f),
+                        tint = Color.White,
                         modifier = Modifier.size(20.dp)
                     )
                 }

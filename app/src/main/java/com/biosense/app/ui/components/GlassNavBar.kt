@@ -1,22 +1,31 @@
 package com.biosense.app.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 
 @Composable
 fun GlassNavBar(
@@ -26,49 +35,32 @@ fun GlassNavBar(
 ) {
     val items = listOf(
         NavItem.Today,
-        NavItem.Trends,
-        NavItem.Chat,
-        NavItem.Search
+        NavItem.Challenges,
+        NavItem.Chat
     )
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp),
-        contentAlignment = Alignment.Center
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.12f),
+                        Color.White.copy(alpha = 0.08f)
+                    )
+                ),
+                shape = RectangleShape
+            )
     ) {
-        // Glass container with iOS-style blur effect
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(27.dp))
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.25f),
-                            Color.White.copy(alpha = 0.15f)
-                        ),
-                        start = Offset(0f, 0f),
-                        end = Offset(1000f, 1000f)
-                    )
-                )
-                .border(
-                    width = 1.dp,
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.4f),
-                            Color.White.copy(alpha = 0.1f),
-                            Color.White.copy(alpha = 0.6f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(27.dp)
-                )
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+                .windowInsetsPadding(WindowInsets.navigationBars),
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEach { item ->
-                GlassNavItem(
+                ModernNavItem(
                     item = item,
                     selected = selectedRoute == item.route,
                     onClick = { onItemSelected(item.route) },
@@ -80,49 +72,80 @@ fun GlassNavBar(
 }
 
 @Composable
-fun GlassNavItem(
+fun ModernNavItem(
     item: NavItem,
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = if (selected) {
-        Color.White.copy(alpha = 0.3f)
-    } else {
-        Color.Transparent
-    }
+    // Animated scale for bounce effect
+    val scale by animateFloatAsState(
+        targetValue = if (selected) 1f else 0.95f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "scale"
+    )
 
-    val contentColor = if (selected) {
-        Color.White
-    } else {
-        Color.White.copy(alpha = 0.5f)
-    }
+    // Animated background color
+    val backgroundColor by animateColorAsState(
+        targetValue = if (selected) {
+            item.color.copy(alpha = 0.25f)
+        } else {
+            Color.Transparent
+        },
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        label = "backgroundColor"
+    )
+
+    // Animated icon color
+    val iconColor by animateColorAsState(
+        targetValue = if (selected) Color.White else Color.White.copy(alpha = 0.55f),
+        animationSpec = tween(durationMillis = 300),
+        label = "iconColor"
+    )
+
+    // Animated text color
+    val textColor by animateColorAsState(
+        targetValue = if (selected) Color.White else Color.White.copy(alpha = 0.6f),
+        animationSpec = tween(durationMillis = 300),
+        label = "textColor"
+    )
 
     Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(backgroundColor)
+            .fillMaxWidth()
             .clickable(
                 onClick = onClick,
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             )
-            .padding(vertical = 8.dp, horizontal = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .background(
+                color = backgroundColor,
+                shape = RectangleShape
+            )
+            .padding(vertical = 8.dp)
+            .scale(scale)
     ) {
+        // Icon with animated size
         Icon(
             imageVector = item.icon,
             contentDescription = item.title,
-            tint = contentColor,
-            modifier = Modifier.size(24.dp)
+            tint = iconColor,
+            modifier = Modifier.size(if (selected) 24.dp else 22.dp)
         )
-        Spacer(modifier = Modifier.height(4.dp))
+
+        // Always show label with animated appearance
+        Spacer(modifier = Modifier.height(2.dp))
+
         Text(
             text = item.title,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            color = contentColor,
+            fontSize = if (selected) 11.sp else 10.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            color = textColor,
             maxLines = 1
         )
     }
