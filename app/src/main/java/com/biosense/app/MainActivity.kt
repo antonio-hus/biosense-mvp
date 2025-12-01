@@ -15,9 +15,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.health.connect.client.HealthConnectClient
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.biosense.app.service.health.HealthConnectManager
 import com.biosense.app.service.notification.NotificationScheduler
 import kotlinx.coroutines.launch
@@ -172,44 +174,9 @@ fun MainContent(
                     viewModel = todayViewModel
                 )
             }
-            composable("trends") {
-                TrendsScreen(
-                    currentRoute = "trends",
-                    onNavigate = { route ->
-                        navController.navigate(route) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    onProfileClick = {
-                        navController.navigate("account")
-                    },
-                    todayViewModel = todayViewModel
-                )
-            }
-            composable("chat") {
-                ChatScreen(
-                    currentRoute = "chat",
-                    onNavigate = { route ->
-                        navController.navigate(route) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    onProfileClick = {
-                        navController.navigate("account")
-                    }
-                )
-            }
-            composable("search") {
-                SearchScreen(
-                    currentRoute = "search",
+            composable("challenges") {
+                ChallengesScreen(
+                    currentRoute = "challenges",
                     onNavigate = { route ->
                         navController.navigate(route) {
                             popUpTo(navController.graph.startDestinationId) {
@@ -223,6 +190,34 @@ fun MainContent(
                         navController.navigate("account")
                     },
                     viewModel = todayViewModel
+                )
+            }
+            composable(
+                route = "chat?prompt={prompt}",
+                arguments = listOf(
+                    navArgument("prompt") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    }
+                )
+            ) { backStackEntry ->
+                val prompt = backStackEntry.arguments?.getString("prompt")
+                ChatScreen(
+                    currentRoute = "chat",
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onProfileClick = {
+                        navController.navigate("account")
+                    },
+                    initialPrompt = prompt
                 )
             }
             composable("account") {
@@ -251,6 +246,14 @@ fun MainContent(
                     onNavigateBack = {
                         navController.popBackStack()
                     }
+                )
+            }
+            composable("metrics_selection") {
+                MetricsSelectionScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    viewModel = todayViewModel
                 )
             }
         }
