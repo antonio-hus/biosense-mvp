@@ -23,14 +23,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.PushPin
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.biosense.app.ui.components.HealthWaveAnimation
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,6 +52,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.biosense.app.data.model.*
 import com.biosense.app.ui.components.GlassNavBar
 import com.biosense.app.ui.components.Header
+import com.biosense.app.ui.components.getChallengeIcon
+import com.biosense.app.ui.components.getChallengeAccentColor
+import com.biosense.app.ui.components.getMetricIcon
+import com.biosense.app.ui.components.getMetricColor
 import com.biosense.app.viewmodel.TodayViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -102,12 +102,19 @@ fun TodayScreen(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Heartbeat animation background
+            HealthWaveAnimation(
+                alpha = 0.15f,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+            ) {
             // Header
             Header(
                 title = "Today",
@@ -162,6 +169,7 @@ fun TodayScreen(
 
             // Add final padding at the bottom
             Spacer(modifier = Modifier.height(24.dp))
+            }
         }
     }
 }
@@ -542,7 +550,8 @@ fun PinnedMetricItem(
     onClick: () -> Unit = {}
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-    val (icon, accentColor) = getMetricStyle(metric.name)
+    val metricIcon = getMetricIcon(metric.name)
+    val accentColor = getMetricColor(metric.name)
 
     Surface(
         modifier = Modifier
@@ -588,19 +597,26 @@ fun PinnedMetricItem(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        // Icon - more compact
+                        // Icon - professional Material Icon
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
                                 .background(
                                     color = accentColor.copy(alpha = 0.2f),
                                     shape = CircleShape
+                                )
+                                .border(
+                                    width = 1.5.dp,
+                                    color = accentColor.copy(alpha = 0.4f),
+                                    shape = CircleShape
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = icon,
-                                fontSize = 20.sp
+                            Icon(
+                                imageVector = metricIcon,
+                                contentDescription = metric.name,
+                                tint = accentColor,
+                                modifier = Modifier.size(22.dp)
                             )
                         }
 
@@ -734,23 +750,9 @@ fun PinnedMetricItem(
     }
 }
 
-// Helper function to get metric-specific styling
-internal fun getMetricStyle(metricName: String): Pair<String, Color> {
-    return when (metricName) {
-        "Heart Rate" -> Pair("❤️", Color(0xFFE91E63))
-        "Blood Pressure" -> Pair("🩺", Color(0xFF9C27B0))
-        "Oxygen Saturation" -> Pair("🫁", Color(0xFF2196F3))
-        "Body Temperature" -> Pair("🌡️", Color(0xFFFF5722))
-        "Hydration" -> Pair("💧", Color(0xFF00BCD4))
-        "Active Calories" -> Pair("🔥", Color(0xFFFF9800))
-        "Total Calories" -> Pair("⚡", Color(0xFFFFC107))
-        "Blood Glucose" -> Pair("🍬", Color(0xFF4CAF50))
-        "Body Fat" -> Pair("📊", Color(0xFF8BC34A))
-        "Body Water Mass" -> Pair("💦", Color(0xFF03A9F4))
-        "Respiratory Rate" -> Pair("🌬️", Color(0xFF009688))
-        else -> Pair("📈", Color(0xFF607D8B))
-    }
-}
+// Note: Metric styling now uses shared helper functions from ChallengeHelpers.kt
+// - getMetricIcon(metricName): ImageVector
+// - getMetricColor(metricName): Color
 
 // === HEALTH SCORE COMPONENTS ===
 
@@ -829,7 +831,7 @@ fun QuickStatsOverview(
                     color = Color.White
                 )
 
-                // Small streak indicator
+                // Small streak indicator with Material Icon
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -845,9 +847,11 @@ fun QuickStatsOverview(
                         )
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
-                    Text(
-                        text = "🔥",
-                        fontSize = 14.sp
+                    Icon(
+                        imageVector = Icons.Filled.Whatshot,
+                        contentDescription = "Streak",
+                        tint = Color(0xFFFF5722),
+                        modifier = Modifier.size(16.dp)
                     )
                     Text(
                         text = "${userProgress.currentStreak}",
@@ -1030,13 +1034,13 @@ fun HealthScoreCard(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        HealthScoreBreakdownItem("💤 Sleep", breakdown.sleep)
+                        HealthScoreBreakdownItem("Sleep", breakdown.sleep, Icons.Filled.Bedtime)
                         Spacer(modifier = Modifier.height(8.dp))
-                        HealthScoreBreakdownItem("🏃 Activity", breakdown.activity)
+                        HealthScoreBreakdownItem("Activity", breakdown.activity, Icons.Filled.FitnessCenter)
                         Spacer(modifier = Modifier.height(8.dp))
-                        HealthScoreBreakdownItem("❤️ Heart Health", breakdown.heartHealth)
+                        HealthScoreBreakdownItem("Heart Health", breakdown.heartHealth, Icons.Filled.FavoriteBorder)
                         Spacer(modifier = Modifier.height(8.dp))
-                        HealthScoreBreakdownItem("🔋 Recovery", breakdown.recovery)
+                        HealthScoreBreakdownItem("Recovery", breakdown.recovery, Icons.Filled.BatteryFull)
                     }
                 }
             }
@@ -1045,17 +1049,28 @@ fun HealthScoreCard(
 }
 
 @Composable
-fun HealthScoreBreakdownItem(label: String, score: Int) {
+fun HealthScoreBreakdownItem(label: String, score: Int, icon: ImageVector) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = label,
-            fontSize = 13.sp,
-            color = Color.White.copy(alpha = 0.8f)
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = Color.White.copy(alpha = 0.7f),
+                modifier = Modifier.size(16.dp)
+            )
+            Text(
+                text = label,
+                fontSize = 13.sp,
+                color = Color.White.copy(alpha = 0.8f)
+            )
+        }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1221,7 +1236,9 @@ fun QuickStatCard(
 
 @Composable
 fun DailyChallengeCard(challenge: DailyChallenge) {
-    val challengeColor = if (challenge.completed) Color(0xFF4CAF50) else Color(0xFF64B5F6)
+    val accentColor = getChallengeAccentColor(challenge.title)
+    val challengeColor = if (challenge.completed) Color(0xFF4CAF50) else accentColor
+    val challengeIcon = getChallengeIcon(challenge.title)
 
     Surface(
         modifier = Modifier
@@ -1266,12 +1283,19 @@ fun DailyChallengeCard(challenge: DailyChallenge) {
                         .background(
                             color = challengeColor.copy(alpha = 0.2f),
                             shape = CircleShape
+                        )
+                        .border(
+                            width = 1.5.dp,
+                            color = challengeColor.copy(alpha = 0.4f),
+                            shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = challenge.emoji,
-                        fontSize = 24.sp
+                    Icon(
+                        imageVector = challengeIcon,
+                        contentDescription = challenge.title,
+                        tint = challengeColor,
+                        modifier = Modifier.size(26.dp)
                     )
                 }
 

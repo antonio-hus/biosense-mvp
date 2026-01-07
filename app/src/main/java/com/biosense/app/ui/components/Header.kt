@@ -35,12 +35,12 @@ fun Header(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Title
-        Text(
-            text = title,
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
+        // Biosense logo with title
+        Logo(
+            iconSize = 36.dp,
+            fontSize = 24.sp,
+            color = Color.White,
+            showText = true
         )
 
         // Right side buttons

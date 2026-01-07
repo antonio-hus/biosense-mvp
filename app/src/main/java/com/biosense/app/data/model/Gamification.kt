@@ -100,39 +100,39 @@ object GamificationData {
         return listOf(
             DailyChallenge(
                 id = "1",
-                title = "Boost Your Steps",
-                description = "Reach 8,500 steps to beat yesterday's count",
-                targetValue = 8500,
+                title = "The 10K Odyssey",
+                description = "Embark on an epic journey to conquer 10,000 steps today",
+                targetValue = 10000,
                 currentValue = 3200,
                 unit = "steps",
                 xpReward = 50,
                 emoji = "👟",
                 aiGenerated = true,
-                aiReasoning = "Yesterday you walked 7,800 steps. I noticed you were less active in the afternoon. Try adding a 15-minute walk after lunch to reach your goal!"
+                aiReasoning = "Yesterday you clocked 7,800 steps - solid effort! But here's the thing: your body is capable of so much more. I noticed your movement drops significantly after 2 PM. The science says: a brisk 20-minute walk post-lunch boosts cognitive function by 30% and demolishes that afternoon energy crash. Time to turn those steps into your superpower. Challenge accepted?"
             ),
             DailyChallenge(
                 id = "2",
-                title = "Improve Sleep Quality",
-                description = "Sleep 7.5 hours tonight for better recovery",
-                targetValue = 450, // 7.5 hours in minutes
+                title = "The Sleep Sanctuary Protocol",
+                description = "Unlock elite recovery with 8 hours of premium sleep tonight",
+                targetValue = 480, // 8 hours in minutes
                 currentValue = 0,
                 unit = "minutes",
                 xpReward = 60,
                 emoji = "😴",
                 aiGenerated = true,
-                aiReasoning = "Your sleep last night was only 6.2 hours, and your HRV was lower than usual. Prioritizing 7.5 hours tonight will help your body recover better."
+                aiReasoning = "Last night's 6.2 hours? That's survival mode, not thriving mode. Your HRV dropped 18% below baseline - your nervous system is waving red flags. Here's what the data shows: 8 hours isn't just sleep, it's your body's repair workshop. Growth hormone peaks, memories consolidate, immune cells multiply. You're literally upgrading yourself overnight. Set your environment: cool room, dark as a cave, screens off 90 minutes before. Your tomorrow-self will be unstoppable."
             ),
             DailyChallenge(
                 id = "3",
-                title = "Heart Rate Recovery",
-                description = "Keep resting heart rate below 68 bpm",
-                targetValue = 68,
+                title = "Cardiac Calm Initiative",
+                description = "Achieve peak heart efficiency - maintain resting rate under 65 bpm",
+                targetValue = 65,
                 currentValue = 72,
                 unit = "bpm",
                 xpReward = 40,
                 emoji = "❤️",
                 aiGenerated = true,
-                aiReasoning = "Yesterday your average resting heart rate was 70 bpm, slightly elevated. Focus on stress management and hydration to lower it today."
+                aiReasoning = "Yesterday's resting heart rate averaged 70 bpm - your heart's working overtime for no reason. Every beat above optimal is wasted energy. The fix? Strategic calm: box breathing (4-4-4-4), stay mega-hydrated (dehydration spikes HR by 10-15 bpm), and cut that caffeine after noon. Elite athletes live in the 40-60 range because their hearts are efficiency machines. Let's train yours to do more with less. Your cardiovascular system will thank you with decades of service."
             )
         )
     }

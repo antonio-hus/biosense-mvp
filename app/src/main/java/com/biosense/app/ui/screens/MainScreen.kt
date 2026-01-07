@@ -9,6 +9,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -53,6 +55,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.painterResource
+import com.biosense.app.R
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -180,18 +184,33 @@ fun MainScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.offset(y = 30.dp)
                             ) {
-                                Text(
-                                    text = "Biosense",
-                                    fontSize = 42.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Secondary
-                                )
+                                // Biosense logo with text
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        text = "biosense",
+                                        fontSize = 48.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Secondary
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Image(
+                                        painter = painterResource(id = R.drawable.biosense_logo),
+                                        contentDescription = "Biosense Logo",
+                                        modifier = Modifier.size(40.dp)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
                                 Text(
                                     text = "Intelligent Health Insights",
                                     fontSize = 18.sp,
                                     color = TextSecondary,
                                     textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(start = 0.dp, top = 12.dp, end = 0.dp, bottom = 0.dp)
+                                    modifier = Modifier.padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp)
                                 )
                                 
                                 Spacer(modifier = Modifier.height(32.dp))
