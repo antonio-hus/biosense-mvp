@@ -53,6 +53,34 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
     private val _healthScore = MutableStateFlow(GamificationData.getSampleHealthScore())
     val healthScore: StateFlow<HealthScore> = _healthScore.asStateFlow()
 
+    // Function to toggle challenge completion (only allows completing, not uncompleting)
+    fun toggleChallengeCompletion(challengeTitle: String) {
+        val challenges = _dailyChallenges.value.toMutableList()
+        val index = challenges.indexOfFirst { it.title == challengeTitle }
+        if (index != -1) {
+            val challenge = challenges[index]
+
+            // Only allow completion if not already completed
+            if (!challenge.completed) {
+                val updatedChallenge = challenge.copy(
+                    completed = true,
+                    currentValue = challenge.targetValue
+                )
+                challenges[index] = updatedChallenge
+                _dailyChallenges.value = challenges
+
+                // Update user progress streak if all completed
+                if (challenges.all { it.completed }) {
+                    val currentProgress = _userProgress.value
+                    _userProgress.value = currentProgress.copy(
+                        currentStreak = currentProgress.currentStreak + 1,
+                        longestStreak = maxOf(currentProgress.longestStreak, currentProgress.currentStreak + 1)
+                    )
+                }
+            }
+        }
+    }
+
 
     // Store raw data for additional metrics
     private val _heartRateData = MutableStateFlow<List<androidx.health.connect.client.records.HeartRateRecord>>(emptyList())

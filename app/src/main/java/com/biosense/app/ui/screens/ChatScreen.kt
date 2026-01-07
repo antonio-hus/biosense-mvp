@@ -11,9 +11,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,8 +32,10 @@ import com.biosense.app.ui.components.ChatBubble
 import com.biosense.app.ui.components.ChatInputField
 import com.biosense.app.ui.components.GlassNavBar
 import com.biosense.app.ui.components.Header
+import com.biosense.app.ui.components.Logo
 import com.biosense.app.ui.components.TypingIndicator
 import com.biosense.app.ui.components.glassEffect
+import com.biosense.app.ui.components.HealthWaveAnimation
 import com.biosense.app.viewmodel.ChatViewModel
 import kotlinx.coroutines.launch
 
@@ -96,31 +98,51 @@ fun ChatScreen(
             containerColor = Color.Transparent,
             bottomBar = { GlassNavBar(currentRoute, onNavigate) }
         ) { innerPadding ->
-            Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-                // Header
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Heartbeat animation background
+                HealthWaveAnimation(
+                    alpha = 0.12f,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                // Header with logo
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    IconButton(
-                        onClick = { scope.launch { drawerState.open() } },
-                        modifier = Modifier
-                            .size(48.dp)
-                            .glassEffect(shape = RoundedCornerShape(16.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.Menu, "History", tint = Color.White)
+                        IconButton(
+                            onClick = { scope.launch { drawerState.open() } },
+                            modifier = Modifier
+                                .size(48.dp)
+                                .glassEffect(shape = RoundedCornerShape(16.dp))
+                        ) {
+                            Icon(Icons.Default.Menu, "History", tint = Color.White)
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column {
+                            Logo(
+                                iconSize = 20.dp,
+                                fontSize = 22.sp,
+                                color = Color.White,
+                                showText = true
+                            )
+                            Text(
+                                text = "AI Health Advisor",
+                                fontSize = 12.sp,
+                                color = Color.White.copy(alpha = 0.6f),
+                                modifier = Modifier.padding(start = 26.dp)
+                            )
+                        }
                     }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Text(
-                        text = "Advisor",
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
                 }
 
                 // Content Area
@@ -167,6 +189,7 @@ fun ChatScreen(
                     },
                     modifier = Modifier.padding(16.dp)
                 )
+                }
             }
         }
     }
@@ -184,6 +207,31 @@ fun EmptyChatSuggestions(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // AI Icon
+        Box(
+            modifier = Modifier
+                .size(80.dp)
+                .background(
+                    color = Color(0xFF64B5AD).copy(alpha = 0.2f),
+                    shape = CircleShape
+                )
+                .border(
+                    width = 2.dp,
+                    color = Color(0xFF64B5AD).copy(alpha = 0.5f),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Psychology,
+                contentDescription = "AI Advisor",
+                tint = Color(0xFF64B5AD),
+                modifier = Modifier.size(40.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         // Title
         Text(
             text = "How can I help you today?",
@@ -205,8 +253,18 @@ fun EmptyChatSuggestions(
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Suggestions - matching app style
-        suggestions.forEach { suggestion ->
+        // Suggestions - matching app style with icons
+        suggestions.forEachIndexed { index, suggestion ->
+            val suggestionIcon = when {
+                suggestion.contains("sleep", ignoreCase = true) -> Icons.Filled.Bedtime
+                suggestion.contains("heart", ignoreCase = true) -> Icons.Filled.FavoriteBorder
+                suggestion.contains("activity", ignoreCase = true) ||
+                suggestion.contains("summary", ignoreCase = true) -> Icons.Filled.Summarize
+                suggestion.contains("analyze", ignoreCase = true) ||
+                suggestion.contains("trend", ignoreCase = true) -> Icons.Filled.TrendingUp
+                else -> Icons.Outlined.Psychology
+            }
+
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -238,16 +296,45 @@ fun EmptyChatSuggestions(
                             color = Color.White.copy(alpha = 0.25f),
                             shape = RoundedCornerShape(16.dp)
                         )
-                        .padding(20.dp),
-                    contentAlignment = Alignment.CenterStart
+                        .padding(20.dp)
                 ) {
-                    Text(
-                        text = suggestion,
-                        color = Color.White.copy(alpha = 0.9f),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        lineHeight = 22.sp
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Icon
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(
+                                    color = Color(0xFF64B5AD).copy(alpha = 0.2f),
+                                    shape = CircleShape
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = Color(0xFF64B5AD).copy(alpha = 0.3f),
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = suggestionIcon,
+                                contentDescription = null,
+                                tint = Color(0xFF64B5AD),
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+
+                        // Text
+                        Text(
+                            text = suggestion,
+                            color = Color.White.copy(alpha = 0.9f),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            lineHeight = 22.sp,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }
@@ -295,6 +382,27 @@ fun GlassDrawerContent(
                 .padding(16.dp)
         ) {
             Column {
+                // Drawer Title
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Psychology,
+                        contentDescription = null,
+                        tint = Color(0xFF64B5AD),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = "AI Advisor",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                // New Session Button
                 Button(
                     onClick = onNewChat,
                     modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -304,30 +412,97 @@ fun GlassDrawerContent(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .glassEffect(shape = RoundedCornerShape(16.dp)),
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color(0xFF64B5AD).copy(alpha = 0.3f),
+                                        Color(0xFF64B5AD).copy(alpha = 0.15f)
+                                    )
+                                ),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = Color(0xFF64B5AD).copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(16.dp)
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Add, null, tint = Color.White)
-                            Spacer(Modifier.width(8.dp))
-                            Text("New Session", color = Color.White)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = "New Chat",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
-                Text("History", color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
+
+                // History Section Title
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.History,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.5f),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "Recent Chats",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
                 Spacer(modifier = Modifier.height(12.dp))
 
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(sessions) { session ->
-                        SessionItem(
-                            session = session,
-                            isSelected = session.id == currentSessionId,
-                            onClick = { onSessionSelected(session.id) },
-                            onDelete = { onDeleteSession(session.id) },
-                            onRename = { showRenameDialog = session.id to session.title }
+                if (sessions.isEmpty()) {
+                    // Empty state
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.ChatBubbleOutline,
+                            contentDescription = null,
+                            tint = Color.White.copy(alpha = 0.3f),
+                            modifier = Modifier.size(48.dp)
                         )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "No chat history yet",
+                            color = Color.White.copy(alpha = 0.5f),
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(sessions) { session ->
+                            SessionItem(
+                                session = session,
+                                isSelected = session.id == currentSessionId,
+                                onClick = { onSessionSelected(session.id) },
+                                onDelete = { onDeleteSession(session.id) },
+                                onRename = { showRenameDialog = session.id to session.title }
+                            )
+                        }
                     }
                 }
             }
@@ -384,16 +559,46 @@ fun SessionItem(
                 onLongClick = { showMenu = true }
             )
             .background(
-                if (isSelected) Color.White.copy(alpha = 0.15f)
-                else Color.Transparent
+                if (isSelected) {
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            Color(0xFF64B5AD).copy(alpha = 0.25f),
+                            Color(0xFF64B5AD).copy(alpha = 0.1f)
+                        )
+                    )
+                } else {
+                    Brush.horizontalGradient(
+                        colors = listOf(Color.Transparent, Color.Transparent)
+                    )
+                },
+                shape = RoundedCornerShape(12.dp)
+            )
+            .border(
+                width = if (isSelected) 1.dp else 0.dp,
+                color = if (isSelected) Color(0xFF64B5AD).copy(alpha = 0.4f) else Color.Transparent,
+                shape = RoundedCornerShape(12.dp)
             )
             .padding(16.dp)
     ) {
-        Text(
-            text = session.title,
-            color = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f),
-            fontSize = 16.sp
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.ChatBubbleOutline,
+                contentDescription = null,
+                tint = if (isSelected) Color(0xFF64B5AD) else Color.White.copy(alpha = 0.4f),
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text = session.title,
+                color = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f),
+                fontSize = 15.sp,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                modifier = Modifier.weight(1f),
+                maxLines = 1
+            )
+        }
 
         DropdownMenu(
             expanded = showMenu,

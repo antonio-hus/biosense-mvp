@@ -10,13 +10,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.fadeIn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +31,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.biosense.app.data.model.*
 import com.biosense.app.ui.components.GlassNavBar
 import com.biosense.app.ui.components.Header
+import com.biosense.app.ui.components.Logo
+import com.biosense.app.ui.components.getChallengeIcon
+import com.biosense.app.ui.components.getChallengeAccentColor
+import com.biosense.app.ui.components.HealthWaveAnimation
 import com.biosense.app.viewmodel.TodayViewModel
 
 @Composable
@@ -37,6 +45,7 @@ fun ChallengesScreen(
     viewModel: TodayViewModel = viewModel()
 ) {
     val dailyChallenges by viewModel.dailyChallenges.collectAsState()
+    val allCompleted = dailyChallenges.all { it.completed }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -48,30 +57,44 @@ fun ChallengesScreen(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-        ) {
-            // Header (without profile button)
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Heartbeat animation background
+            HealthWaveAnimation(
+                alpha = 0.12f,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+            ) {
+            // Header with logo
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Challenges",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                Logo(
+                    iconSize = 36.dp,
+                    fontSize = 24.sp,
+                    color = Color.White,
+                    showText = true
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Hero Section
-            ChallengesHeroSection(completedCount = dailyChallenges.count { it.completed })
+            // Show either Congratulations or Hero Section
+            if (allCompleted) {
+                CongratulationsSection()
+            } else {
+                // Hero Section
+                ChallengesHeroSection(completedCount = dailyChallenges.count { it.completed })
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -83,17 +106,19 @@ fun ChallengesScreen(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    Icon(
+                        imageVector = Icons.Outlined.AutoAwesome,
+                        contentDescription = "AI Challenges",
+                        tint = Color(0xFF64B5F6),
+                        modifier = Modifier.size(28.dp)
+                    )
                     Text(
                         text = "Today's AI Challenges",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
-                    )
-                    Text(
-                        text = "🤖",
-                        fontSize = 20.sp
                     )
                 }
 
@@ -108,7 +133,10 @@ fun ChallengesScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 dailyChallenges.forEach { challenge ->
-                    ChallengeDetailCard(challenge = challenge)
+                    ChallengeDetailCard(
+                        challenge = challenge,
+                        onToggleComplete = { viewModel.toggleChallengeCompletion(challenge.title) }
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
@@ -119,6 +147,107 @@ fun ChallengesScreen(
             ChallengeTipsSection()
 
             Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun CongratulationsSection() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(24.dp),
+                    ambientColor = Color.Black.copy(alpha = 0.1f),
+                    spotColor = Color.Black.copy(alpha = 0.1f)
+                ),
+            shape = RoundedCornerShape(24.dp),
+            color = Color.Transparent
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF4CAF50).copy(alpha = 0.3f),
+                                Color(0xFF2E7D32).copy(alpha = 0.15f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .border(
+                        width = 2.dp,
+                        color = Color(0xFF4CAF50).copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .padding(32.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Trophy Icon
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .background(
+                                color = Color(0xFFFFC107).copy(alpha = 0.3f),
+                                shape = CircleShape
+                            )
+                            .border(
+                                width = 3.dp,
+                                color = Color(0xFFFFC107).copy(alpha = 0.6f),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.EmojiEvents,
+                            contentDescription = "Trophy",
+                            tint = Color(0xFFFFC107),
+                            modifier = Modifier.size(56.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = "Congratulations!",
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "You've completed all your challenges for today!",
+                        fontSize = 18.sp,
+                        color = Color.White.copy(alpha = 0.9f),
+                        textAlign = TextAlign.Center,
+                        lineHeight = 26.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "See you tomorrow!",
+                        fontSize= 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF4CAF50),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
         }
     }
 }
@@ -168,10 +297,28 @@ fun ChallengesHeroSection(completedCount: Int) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = "🎯",
-                        fontSize = 48.sp
-                    )
+                    // Trophy/Target icon
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .background(
+                                color = Color(0xFF64B5F6).copy(alpha = 0.2f),
+                                shape = CircleShape
+                            )
+                            .border(
+                                width = 2.dp,
+                                color = Color(0xFF64B5F6).copy(alpha = 0.5f),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (completedCount == totalChallenges) Icons.Filled.EmojiEvents else Icons.Filled.TrackChanges,
+                            contentDescription = "Challenges Progress",
+                            tint = Color(0xFF64B5F6),
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -187,7 +334,7 @@ fun ChallengesHeroSection(completedCount: Int) {
 
                     Text(
                         text = if (completedCount == totalChallenges) {
-                            "Amazing! All challenges completed! 🎉"
+                            "Amazing! All challenges completed!"
                         } else {
                             "Keep going! You're doing great!"
                         },
@@ -225,9 +372,14 @@ fun ChallengesHeroSection(completedCount: Int) {
 }
 
 @Composable
-fun ChallengeDetailCard(challenge: DailyChallenge) {
+fun ChallengeDetailCard(
+    challenge: DailyChallenge,
+    onToggleComplete: () -> Unit = {}
+) {
     var isExpanded by remember { mutableStateOf(false) }
-    val challengeColor = if (challenge.completed) Color(0xFF4CAF50) else Color(0xFF64B5F6)
+    val accentColor = getChallengeAccentColor(challenge.title)
+    val challengeColor = if (challenge.completed) Color(0xFF4CAF50) else accentColor
+    val challengeIcon = getChallengeIcon(challenge.title)
 
     Surface(
         modifier = Modifier
@@ -237,8 +389,7 @@ fun ChallengeDetailCard(challenge: DailyChallenge) {
                 shape = RoundedCornerShape(16.dp),
                 ambientColor = Color.Black.copy(alpha = 0.1f),
                 spotColor = Color.Black.copy(alpha = 0.1f)
-            )
-            .clickable { isExpanded = !isExpanded },
+            ),
         shape = RoundedCornerShape(16.dp),
         color = Color.Transparent
     ) {
@@ -263,7 +414,9 @@ fun ChallengeDetailCard(challenge: DailyChallenge) {
         ) {
             Column {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { isExpanded = !isExpanded },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -272,19 +425,26 @@ fun ChallengeDetailCard(challenge: DailyChallenge) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        // Challenge emoji - more compact
+                        // Challenge icon - professional design
                         Box(
                             modifier = Modifier
                                 .size(44.dp)
                                 .background(
                                     color = challengeColor.copy(alpha = 0.2f),
                                     shape = CircleShape
+                                )
+                                .border(
+                                    width = 1.5.dp,
+                                    color = challengeColor.copy(alpha = 0.4f),
+                                    shape = CircleShape
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = challenge.emoji,
-                                fontSize = 22.sp
+                            Icon(
+                                imageVector = challengeIcon,
+                                contentDescription = challenge.title,
+                                tint = challengeColor,
+                                modifier = Modifier.size(24.dp)
                             )
                         }
 
@@ -305,13 +465,54 @@ fun ChallengeDetailCard(challenge: DailyChallenge) {
                         }
                     }
 
+                    // Completion checkbox - only enabled when progress is 100% AND not already completed
+                    val canComplete = challenge.progress >= 1.0f && !challenge.completed
+                    IconButton(
+                        onClick = onToggleComplete,
+                        enabled = canComplete,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .background(
+                                    color = if (challenge.completed) challengeColor else Color.Transparent,
+                                    shape = CircleShape
+                                )
+                                .border(
+                                    width = 2.dp,
+                                    color = when {
+                                        challenge.completed -> challengeColor
+                                        canComplete -> challengeColor
+                                        else -> challengeColor.copy(alpha = 0.3f)
+                                    },
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (challenge.completed) {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = "Completed - Locked",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    }
+
                     // Expand indicator
-                    Icon(
-                        imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                        contentDescription = if (isExpanded) "Collapse" else "Expand",
-                        tint = Color.White.copy(alpha = 0.6f),
-                        modifier = Modifier.size(20.dp)
-                    )
+                    IconButton(
+                        onClick = { isExpanded = !isExpanded },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                            contentDescription = if (isExpanded) "Collapse" else "Expand",
+                            tint = Color.White.copy(alpha = 0.6f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
 
                 // Compact progress bar - always visible
@@ -398,12 +599,15 @@ fun ChallengeDetailCard(challenge: DailyChallenge) {
                                     .padding(12.dp)
                             ) {
                                 Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier.fillMaxWidth()
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.Top
                                 ) {
-                                    Text(
-                                        text = "🤖",
-                                        fontSize = 16.sp
+                                    Icon(
+                                        imageVector = Icons.Outlined.Psychology,
+                                        contentDescription = "AI Insight",
+                                        tint = Color(0xFF64B5F6),
+                                        modifier = Modifier.size(20.dp)
                                     )
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
@@ -437,12 +641,23 @@ fun ChallengeTipsSection() {
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
     ) {
-        Text(
-            text = "💡 About Your Challenges",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Lightbulb,
+                contentDescription = "Tips",
+                tint = Color(0xFFFFC107),
+                modifier = Modifier.size(24.dp)
+            )
+            Text(
+                text = "About Your Challenges",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 

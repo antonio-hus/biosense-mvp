@@ -21,6 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.biosense.app.ui.components.getMetricIcon
+import com.biosense.app.ui.components.getMetricColor
 import com.biosense.app.viewmodel.TodayViewModel
 
 @Composable
@@ -134,7 +136,8 @@ fun MetricSelectionItem(
     isPinned: Boolean,
     onToggle: () -> Unit
 ) {
-    val (icon, accentColor) = getMetricStyle(metricName)
+    val metricIcon = getMetricIcon(metricName)
+    val accentColor = getMetricColor(metricName)
     val bgColor = if (isPinned) accentColor else Color.White
 
     Surface(
@@ -186,12 +189,19 @@ fun MetricSelectionItem(
                             .background(
                                 color = accentColor.copy(alpha = 0.2f),
                                 shape = CircleShape
+                            )
+                            .border(
+                                width = 1.5.dp,
+                                color = accentColor.copy(alpha = 0.4f),
+                                shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = icon,
-                            fontSize = 24.sp
+                        Icon(
+                            imageVector = metricIcon,
+                            contentDescription = metricName,
+                            tint = accentColor,
+                            modifier = Modifier.size(26.dp)
                         )
                     }
 

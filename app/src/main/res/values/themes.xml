@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Biosense" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Biosense" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Remove the default Android splash screen -->
+        <item name="android:windowBackground">@color/app_background</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
 </resources>
